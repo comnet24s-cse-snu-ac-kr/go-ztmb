@@ -8,36 +8,30 @@ import (
 	"io"
 )
 
-// pad applies PKCS7 padding to the plaintext to make it a multiple of the block size
-func pad(plaintext []byte, blockSize int) []byte {
-	padding := blockSize - len(plaintext)%blockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(plaintext, padtext...)
+func pad(src []byte, size int) []byte {
+	padtext := bytes.Repeat([]byte{0}, size-len(src))
+	return append(src, padtext...)
 }
 
-// EncryptAES encrypts a byte slice using AES-256 in CBC mode
-func EncryptAES(plaintext, key []byte) ([]byte, []byte, error) {
-	// Create a new AES cipher with the given key
+func EncryptAES(plain, key []byte) ([]byte, []byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// Generate a new IV
 	iv := make([]byte, aes.BlockSize)
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		return nil, nil, err
 	}
 
-	// Pad the plaintext
-	plaintext = pad(plaintext, aes.BlockSize)
+	padSize := len(plain) + (aes.BlockSize - len(plain)%aes.BlockSize)
+	plain = pad(plain, padSize)
 
-	// Create a new CBC encrypter
-	mode := cipher.NewCBCEncrypter(block, iv)
+	enc := cipher.NewCBCEncrypter(block, iv)
+	cipher := make([]byte, len(plain))
+	enc.CryptBlocks(cipher, plain)
 
-	// Encrypt the plaintext
-	ciphertext := make([]byte, len(plaintext))
-	mode.CryptBlocks(ciphertext, plaintext)
+	cipher = pad(cipher, 512)
 
-	return ciphertext, iv, nil
+	return cipher, iv, nil
 }

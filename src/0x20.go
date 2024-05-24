@@ -5,20 +5,20 @@ import (
 )
 
 func Encode0x20(dns *DnsPacket) error {
-  digest, err := poseidon.HashBytes(dns.question.qname)
-  if err != nil {
-    return err
-  }
+	digest, err := poseidon.HashBytes(dns.question.qname)
+	if err != nil {
+		return err
+	}
 
-  for i, b := range dns.question.qname {
-    if ('A' <= b && b <= 'Z') || ('a' <= b && b <= 'z') {
-      if digest.Bit(i) == 0 {
-        dns.question.qname[i] = b | 0x20
-      } else {
-        dns.question.qname[i] = b &^ 0x20
-      }
-    }
-  }
+	for i, b := range dns.question.qname {
+		if ('A' <= b && b <= 'Z') || ('a' <= b && b <= 'z') {
+			if digest.Bit(i) == 0 {
+				dns.question.qname[i] = b | 0x20
+			} else {
+				dns.question.qname[i] = b &^ 0x20
+			}
+		}
+	}
 
-  return nil
+	return nil
 }
