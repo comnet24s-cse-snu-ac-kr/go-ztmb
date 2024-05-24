@@ -1,5 +1,6 @@
 BINARY := zkmbx
 GO_FILES := $(wildcard src/*.go)
+BUILD := build
 
 VERSION=0.1.0
 COMMIT=$(shell git rev-parse HEAD)
@@ -14,10 +15,10 @@ build:
 build-all: build-arm build-amd
 
 build-arm:
-	GOOS=darwin GOARCH=arm64 go build ${LDFLAGS} -o ${BINARY}-darwin-arm64 ${GO_FILES}
+	GOOS=darwin GOARCH=arm64 go build ${LDFLAGS} -o ${BUILD}/${BINARY}-darwin-arm64 ${GO_FILES}
 
 build-amd:
-	GOOS=darwin GOARCH=amd64 go build ${LDFLAGS} -o ${BINARY}-darwin-amd64 ${GO_FILES}
+	GOOS=darwin GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD}/${BINARY}-darwin-amd64 ${GO_FILES}
 
 run: build
 	./$(BINARY)

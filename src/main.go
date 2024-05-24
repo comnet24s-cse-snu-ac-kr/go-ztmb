@@ -27,7 +27,7 @@ func main() {
 
 	fmt.Println("0x20:", packet.GetStringQname())
 
-	cipher, iv, err := EncryptAES(packet.raw, []byte(aesKey))
+	cipher, iv, err := EncryptAES(packet.GetBytes(), []byte(aesKey))
 	if err != nil {
 		fmt.Println("error:", err)
 		return

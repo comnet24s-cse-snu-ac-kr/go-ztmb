@@ -22,7 +22,6 @@ type DnsQuestion struct {
 }
 
 type DnsPacket struct {
-	raw      []byte
 	header   DnsHeader
 	question DnsQuestion
 }
@@ -45,13 +44,29 @@ func (dns *DnsPacket) GetStringQname() string {
 	return out
 }
 
+func (dns *DnsPacket) GetBytes() []byte {
+	buf := make([]byte, 0)
+
+	buf = append(buf, dns.header.id[:]...)
+	buf = append(buf, dns.header.flags[:]...)
+	buf = append(buf, dns.header.qdcount[:]...)
+	buf = append(buf, dns.header.ancount[:]...)
+	buf = append(buf, dns.header.nscount[:]...)
+	buf = append(buf, dns.header.arcount[:]...)
+
+	buf = append(buf, dns.question.qname[:]...)
+	buf = append(buf, dns.question.qtype[:]...)
+	buf = append(buf, dns.question.qclass[:]...)
+
+	return buf
+}
+
 func (dns *DnsPacket) DecodeHexString(input string) error {
 	byteSlice, err := hex.DecodeString(input)
 	if err != nil {
 		return err
 	}
 
-	dns.raw = byteSlice
 	reader := bytes.NewReader(byteSlice)
 
 	if _, err := reader.Read(dns.header.id[:]); err != nil {
