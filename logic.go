@@ -1,39 +1,40 @@
 package main
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"math/big"
 
 	"github.com/iden3/go-iden3-crypto/poseidon"
 )
 
-// Convert a string to a slice of big.Int
+const (
+  PACKET = "24d7010000010000000000003f6257466a4c545930514739775a57357a63326775593239744c48567459574d744d544934514739775a57357a63326775593239744c47687459574d746332683f684d6930794e545973614731685979317a614745794c5455784d69786f6257466a4c584e6f5954457361473168597931745a4455745a585274514739775a573f357a63326775593239744c47687459574d74636d6c775a57316b4d5459774c575630625542766347567563334e6f4c6d4e766253786f6257466a4c584e6f59145445744f5459745a585274514739775a57357a630138016601310531333934300674756e6e656c076578616d706c65036f72670000050001"
+)
+
 func stringToBigInts(s string) []*big.Int {
-	hash := sha256.Sum256([]byte(s))
-	ints := make([]*big.Int, len(hash)/32)
+  ints := make([]*big.Int, 0, len(s))
 
-	for i := 0; i < len(hash)/32; i++ {
-		ints[i] = new(big.Int).SetBytes(hash[i*32 : (i+1)*32])
-	}
+  for _, char := range s {
+    charInt := big.NewInt(int64(char))
+    ints = append(ints, charInt)
+  }
 
-	return ints
+  return ints
+}
+
+func logic(inputBI []*big.Int) (*big.Int, error) {
+	hash, err := poseidon.Hash(inputBI)
+  return hash, err
 }
 
 func main() {
-	// Example input string
-	inputString := "Hello, Poseidon!"
+	inputString := PACKET
+  inputBI := stringToBigInts(inputString)
+  outputBI, err:= logic(inputBI)
+  if err != nil {
+		fmt.Println("error:", err)
+    return
+  }
 
-	// Convert the string to a slice of big.Int
-	inputInts := stringToBigInts(inputString)
-
-	// Calculate Poseidon hash
-	hash, err := poseidon.Hash(inputInts)
-	if err != nil {
-		fmt.Println("Error calculating Poseidon hash:", err)
-		return
-	}
-
-	// Print the result
-	fmt.Println("Poseidon Hash:", hash)
+  fmt.Println("Poseidon hash:", outputBI)
 }
