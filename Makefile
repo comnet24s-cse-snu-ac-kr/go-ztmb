@@ -1,63 +1,34 @@
-# Makefile for a Go project
-
-# Project variables
-APP_NAME := logic
+BINARY := zkmbx
 GO_FILES := $(wildcard src/*.go)
 
-# Default target
+VERSION=0.1.0
+COMMIT=$(shell git rev-parse HEAD)
+BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
+LDFLAGS = -ldflags "-X main.VERSION=${VERSION} -X main.COMMIT=${COMMIT} -X main.BRANCH=${BRANCH}"
+
 all: build
 
-# Build the Go project
 build:
-	@echo "Building the application..."
-	go build -o $(APP_NAME) $(GO_FILES)
+	go build ${LDFLAGS} -o ${BINARY} ${GO_FILES}
 
-# Run the Go application
+build-all: build-arm build-amd
+
+build-arm:
+	GOOS=darwin GOARCH=arm64 go build ${LDFLAGS} -o ${BINARY}-darwin-arm64 ${GO_FILES}
+
+build-amd:
+	GOOS=darwin GOARCH=amd64 go build ${LDFLAGS} -o ${BINARY}-darwin-amd64 ${GO_FILES}
+
 run: build
-	@echo "Running the application..."
-	./$(APP_NAME)
+	./$(BINARY)
 
-# Clean up build artifacts
 clean:
-	@echo "Cleaning up..."
-	rm -f $(APP_NAME)
+	rm -f $(BINARY)*
 
-# Test the Go project
-test:
-	@echo "Running tests..."
-	go test ./...
-
-# Format the Go source files
 fmt:
-	@echo "Formatting source files..."
 	go fmt ./...
 
-# Lint the Go source files
-lint:
-	@echo "Linting source files..."
-	go vet ./...
-
-# Install dependencies
 deps:
-	@echo "Installing dependencies..."
 	go mod tidy
-
-# Help message
-help:
-	@echo "Makefile for Go project"
-	@echo
-	@echo "Usage:"
-	@echo "  make [target]"
-	@echo
-	@echo "Targets:"
-	@echo "  all       - Build the application (default)"
-	@echo "  build     - Build the application"
-	@echo "  run       - Run the application"
-	@echo "  clean     - Clean up build artifacts"
-	@echo "  test      - Run tests"
-	@echo "  fmt       - Format the Go source files"
-	@echo "  lint      - Lint the Go source files"
-	@echo "  deps      - Install dependencies"
-	@echo "  help      - Show this help message"
 
 .PHONY: all build run clean test fmt lint deps help
