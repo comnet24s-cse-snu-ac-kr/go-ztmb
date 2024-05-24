@@ -6,31 +6,31 @@ import (
 )
 
 func main() {
-  var packetHex string
-  var aesKey string
+	var packetHex string
+	var aesKey string
 
-  fmt.Println("Packet string (hex): ")
-  fmt.Scanln(&packetHex)
-  fmt.Println("AES key (256): ")
-  fmt.Scanln(&aesKey)
+	fmt.Println("Packet string (hex): ")
+	fmt.Scanln(&packetHex)
+	fmt.Println("AES key (256): ")
+	fmt.Scanln(&aesKey)
 
 	packet := new(DnsPacket)
 	if err := packet.DecodeHexString(packetHex); err != nil {
 		fmt.Println("error:", err)
-    return
+		return
 	}
 
 	if err := Encode0x20(packet); err != nil {
 		fmt.Println("error:", err)
-    return
+		return
 	}
 
-  fmt.Println("0x20:", packet.GetStringQname())
+	fmt.Println("0x20:", packet.GetStringQname())
 
 	cipher, iv, err := EncryptAES(packet.raw, []byte(aesKey))
 	if err != nil {
 		fmt.Println("error:", err)
-    return
+		return
 	}
 
 	fmt.Println("Cipher:", hex.EncodeToString(cipher))
