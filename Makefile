@@ -2,7 +2,7 @@
 
 # Project variables
 APP_NAME := logic
-GO_FILES := $(wildcard *.go)
+GO_FILES := $(wildcard src/*.go)
 
 # Default target
 all: build
