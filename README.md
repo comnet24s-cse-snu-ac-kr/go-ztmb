@@ -1,4 +1,4 @@
-# ZKMBX (w/o zkp)
+# ZTMB (Zero Tunneling MiddleBox) w/o zkp
 
 - Logic implementation without ZKP written in go
 
