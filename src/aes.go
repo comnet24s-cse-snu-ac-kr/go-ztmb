@@ -25,9 +25,9 @@ func EncryptAES(plain, key []byte) ([]byte, []byte, error) {
 		return nil, nil, err
 	}
 
-  if (len(plain) != 512) {
-    return nil, nil, errors.New("Packet size mismatch (not 512byte)")
-  }
+	if len(plain) != 512 {
+		return nil, nil, errors.New("Packet size mismatch (not 512byte)")
+	}
 
 	enc := cipher.NewCBCEncrypter(block, iv)
 	cipher := make([]byte, len(plain))

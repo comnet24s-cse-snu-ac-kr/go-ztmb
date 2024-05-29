@@ -5,29 +5,11 @@ import (
 	"fmt"
 )
 
-type DnsHeader struct {
-	id      [2]byte
-	flags   [2]byte
-	qdcount [2]byte
-	ancount [2]byte
-	nscount [2]byte
-	arcount [2]byte
-}
+type QName []byte
 
-type DnsQuestion struct {
-	qname  []byte
-	qtype  [2]byte
-	qclass [2]byte
-}
-
-type DnsPacket struct {
-	header   DnsHeader
-	question DnsQuestion
-}
-
-func (dns *DnsPacket) String() string {
+func (qn *QName) String() string {
 	out := ""
-	b := dns.question.qname
+	b := *qn
 	i := 0
 	for i < len(b) {
 		if b[i] == 0 {
@@ -41,6 +23,34 @@ func (dns *DnsPacket) String() string {
 	}
 
 	return out
+}
+
+type DnsResourceRecord interface {
+	Marshal(b []byte) error
+	Unmarshal() []byte
+}
+
+type DnsHeader struct {
+	id      [2]byte
+	flags   [2]byte
+	qdcount [2]byte
+	ancount [2]byte
+	nscount [2]byte
+	arcount [2]byte
+}
+
+type DnsQuestion struct {
+	qname  QName
+	qtype  [2]byte
+	qclass [2]byte
+}
+
+type DnsPacket struct {
+	header     DnsHeader
+	question   DnsQuestion
+	answer     []DnsResourceRecord // Not used for simplicity
+	authority  []DnsResourceRecord // Not used for simplicity
+	additional []DnsResourceRecord
 }
 
 func (dns *DnsPacket) Unmarshal() []byte {
@@ -57,9 +67,17 @@ func (dns *DnsPacket) Unmarshal() []byte {
 	buf = append(buf, dns.question.qtype[:]...)
 	buf = append(buf, dns.question.qclass[:]...)
 
+	for _, a := range dns.additional {
+		buf = append(buf, a.Unmarshal()...)
+	}
+
 	return buf
 }
 
+/**
+ * @arg     []byte    Assume that the packet has header and question field only
+ * @return  []byte
+ */
 func (dns *DnsPacket) Marshal(b []byte) error {
 	reader := bytes.NewReader(b)
 
