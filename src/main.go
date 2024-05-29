@@ -26,7 +26,7 @@ func main() {
 	}
 
 	padding := new(DnsRROPT)
-	padding.FillZero(512 - len(b) - 4 - 48)
+	padding.FillZero(512 - len(b) - 4)
 	packet.additional = append(packet.additional, padding)
 
 	if err := Encode0x20(packet); err != nil {
@@ -36,14 +36,17 @@ func main() {
 
 	fmt.Println("0x20:", packet.question.qname.String())
 	fmt.Println("len:", len(packet.Unmarshal()))
-  fmt.Println("packet (unmarshal):", packet.Unmarshal())
+	fmt.Println("packet (unmarshal):", packet.Unmarshal())
 
-	cipher, iv, err := EncryptAES(packet.Unmarshal(), []byte(aesKey))
+	nonce := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	ad := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+
+	cipher, err := EncryptAES256GCM([]byte(aesKey), nonce, packet.Unmarshal(), ad)
 	if err != nil {
 		fmt.Println("error:", err)
 		return
 	}
 
 	fmt.Println("Cipher:", hex.EncodeToString(cipher))
-	fmt.Println("IV:", hex.EncodeToString(iv))
+	fmt.Println("Cipher len:", len(cipher))
 }
