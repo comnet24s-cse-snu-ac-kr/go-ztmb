@@ -14,8 +14,13 @@ func main() {
 	fmt.Println("AES key (256): ")
 	fmt.Scanln(&aesKey)
 
+  b, err := hex.DecodeString(packetHex)
+  if err != nil {
+    fmt.Println("error:", err)
+  }
+
 	packet := new(DnsPacket)
-	if err := packet.DecodeHexString(packetHex); err != nil {
+	if err := packet.Marshal(b); err != nil {
 		fmt.Println("error:", err)
 		return
 	}
@@ -27,7 +32,7 @@ func main() {
 
 	fmt.Println("0x20:", packet.GetStringQname())
 
-	cipher, iv, err := EncryptAES(packet.GetBytes(), []byte(aesKey))
+	cipher, iv, err := EncryptAES(packet.Unmarshal(), []byte(aesKey))
 	if err != nil {
 		fmt.Println("error:", err)
 		return

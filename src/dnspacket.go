@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
 )
 
@@ -44,7 +43,7 @@ func (dns *DnsPacket) GetStringQname() string {
 	return out
 }
 
-func (dns *DnsPacket) GetBytes() []byte {
+func (dns *DnsPacket) Unmarshal() []byte {
 	buf := make([]byte, 0)
 
 	buf = append(buf, dns.header.id[:]...)
@@ -61,13 +60,8 @@ func (dns *DnsPacket) GetBytes() []byte {
 	return buf
 }
 
-func (dns *DnsPacket) DecodeHexString(input string) error {
-	byteSlice, err := hex.DecodeString(input)
-	if err != nil {
-		return err
-	}
-
-	reader := bytes.NewReader(byteSlice)
+func (dns *DnsPacket) Marshal(b []byte) error {
+	reader := bytes.NewReader(b)
 
 	if _, err := reader.Read(dns.header.id[:]); err != nil {
 		return err
@@ -88,7 +82,7 @@ func (dns *DnsPacket) DecodeHexString(input string) error {
 		return err
 	}
 
-	dns.question.qname = make([]byte, len(byteSlice)-16)
+	dns.question.qname = make([]byte, len(b)-16)
 	if _, err := reader.Read(dns.question.qname); err != nil {
 		return err
 	}
