@@ -3,29 +3,33 @@ package main
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
 	"errors"
-	"io"
+	"fmt"
 )
 
-func EncryptAES(plain, key []byte) ([]byte, []byte, error) {
+const (
+	AES_KEY_BYTES   = 32
+	AES_NONCE_BYTES = 12
+)
+
+func EncryptAES256GCM(key, nonce, plaintext, additionalData []byte) ([]byte, error) {
+	if len(key) != AES_KEY_BYTES {
+		return nil, errors.New(fmt.Sprintf("AES key size mismatch (not %dbit)", AES_KEY_BYTES))
+	}
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	iv := make([]byte, aes.BlockSize)
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		return nil, nil, err
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
 	}
 
-	if len(plain) != 512 {
-		return nil, nil, errors.New("Packet size mismatch (not 512byte)")
+	if len(nonce) != AES_NONCE_BYTES {
+		return nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", AES_NONCE_BYTES))
 	}
 
-	enc := cipher.NewCBCEncrypter(block, iv)
-	cipher := make([]byte, len(plain))
-	enc.CryptBlocks(cipher, plain)
-
-	return cipher, iv, nil
+	return gcm.Seal(nil, nonce, plaintext, additionalData), nil
 }
