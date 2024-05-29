@@ -2,33 +2,14 @@ package main
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
 )
 
-type DnsHeader struct {
-	id      [2]byte
-	flags   [2]byte
-	qdcount [2]byte
-	ancount [2]byte
-	nscount [2]byte
-	arcount [2]byte
-}
+type QName []byte
 
-type DnsQuestion struct {
-	qname  []byte
-	qtype  [2]byte
-	qclass [2]byte
-}
-
-type DnsPacket struct {
-	header   DnsHeader
-	question DnsQuestion
-}
-
-func (dns *DnsPacket) GetStringQname() string {
+func (qn *QName) String() string {
 	out := ""
-	b := dns.question.qname
+	b := *qn
 	i := 0
 	for i < len(b) {
 		if b[i] == 0 {
@@ -44,7 +25,35 @@ func (dns *DnsPacket) GetStringQname() string {
 	return out
 }
 
-func (dns *DnsPacket) GetBytes() []byte {
+type DnsResourceRecord interface {
+	Marshal(b []byte) error
+	Unmarshal() []byte
+}
+
+type DnsHeader struct {
+	id      [2]byte
+	flags   [2]byte
+	qdcount [2]byte
+	ancount [2]byte
+	nscount [2]byte
+	arcount [2]byte
+}
+
+type DnsQuestion struct {
+	qname  QName
+	qtype  [2]byte
+	qclass [2]byte
+}
+
+type DnsPacket struct {
+	header     DnsHeader
+	question   DnsQuestion
+	answer     []DnsResourceRecord // Not used for simplicity
+	authority  []DnsResourceRecord // Not used for simplicity
+	additional []DnsResourceRecord
+}
+
+func (dns *DnsPacket) Unmarshal() []byte {
 	buf := make([]byte, 0)
 
 	buf = append(buf, dns.header.id[:]...)
@@ -58,16 +67,19 @@ func (dns *DnsPacket) GetBytes() []byte {
 	buf = append(buf, dns.question.qtype[:]...)
 	buf = append(buf, dns.question.qclass[:]...)
 
+	for _, a := range dns.additional {
+		buf = append(buf, a.Unmarshal()...)
+	}
+
 	return buf
 }
 
-func (dns *DnsPacket) DecodeHexString(input string) error {
-	byteSlice, err := hex.DecodeString(input)
-	if err != nil {
-		return err
-	}
-
-	reader := bytes.NewReader(byteSlice)
+/**
+ * @arg     []byte    Assume that the packet has header and question field only
+ * @return  []byte
+ */
+func (dns *DnsPacket) Marshal(b []byte) error {
+	reader := bytes.NewReader(b)
 
 	if _, err := reader.Read(dns.header.id[:]); err != nil {
 		return err
@@ -88,7 +100,7 @@ func (dns *DnsPacket) DecodeHexString(input string) error {
 		return err
 	}
 
-	dns.question.qname = make([]byte, len(byteSlice)-16)
+	dns.question.qname = make([]byte, len(b)-16)
 	if _, err := reader.Read(dns.question.qname); err != nil {
 		return err
 	}

@@ -14,20 +14,31 @@ func main() {
 	fmt.Println("AES key (256): ")
 	fmt.Scanln(&aesKey)
 
+	b, err := hex.DecodeString(packetHex)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+
 	packet := new(DnsPacket)
-	if err := packet.DecodeHexString(packetHex); err != nil {
+	if err := packet.Marshal(b); err != nil {
 		fmt.Println("error:", err)
 		return
 	}
+
+	padding := new(DnsRROPT)
+	padding.FillZero(512 - len(b) - 4 - 48)
+	packet.additional = append(packet.additional, padding)
 
 	if err := Encode0x20(packet); err != nil {
 		fmt.Println("error:", err)
 		return
 	}
 
-	fmt.Println("0x20:", packet.GetStringQname())
+	fmt.Println("0x20:", packet.question.qname.String())
+	fmt.Println("len:", len(packet.Unmarshal()))
+  fmt.Println("packet (unmarshal):", packet.Unmarshal())
 
-	cipher, iv, err := EncryptAES(packet.GetBytes(), []byte(aesKey))
+	cipher, iv, err := EncryptAES(packet.Unmarshal(), []byte(aesKey))
 	if err != nil {
 		fmt.Println("error:", err)
 		return

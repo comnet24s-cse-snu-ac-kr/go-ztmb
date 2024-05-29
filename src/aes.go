@@ -5,6 +5,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"errors"
 	"io"
 )
 
@@ -24,14 +25,13 @@ func EncryptAES(plain, key []byte) ([]byte, []byte, error) {
 		return nil, nil, err
 	}
 
-	padSize := len(plain) + (aes.BlockSize - len(plain)%aes.BlockSize)
-	plain = pad(plain, padSize)
+	if len(plain) != 512 {
+		return nil, nil, errors.New("Packet size mismatch (not 512byte)")
+	}
 
 	enc := cipher.NewCBCEncrypter(block, iv)
 	cipher := make([]byte, len(plain))
 	enc.CryptBlocks(cipher, plain)
-
-	cipher = pad(cipher, 512)
 
 	return cipher, iv, nil
 }
