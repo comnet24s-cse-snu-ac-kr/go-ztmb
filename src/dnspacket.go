@@ -25,7 +25,7 @@ type DnsPacket struct {
 	question DnsQuestion
 }
 
-func (dns *DnsPacket) GetStringQname() string {
+func (dns *DnsPacket) String() string {
 	out := ""
 	b := dns.question.qname
 	i := 0

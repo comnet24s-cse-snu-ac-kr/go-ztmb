@@ -30,7 +30,7 @@ func main() {
 		return
 	}
 
-	fmt.Println("0x20:", packet.GetStringQname())
+	fmt.Println("0x20:", packet.String())
 
 	cipher, iv, err := EncryptAES(packet.Unmarshal(), []byte(aesKey))
 	if err != nil {
