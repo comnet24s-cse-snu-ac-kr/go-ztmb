@@ -31,7 +31,7 @@ func main() {
 	padding.FillZero(512 - len(b) - 4)
   packet.AppendAdditionalRR(padding)
 
-	if err := Encode0x20(packet); err != nil {
+	if err := packet.question[0].Encode0x20(); err != nil {
 		fmt.Println("error:", err)
 		return
 	}

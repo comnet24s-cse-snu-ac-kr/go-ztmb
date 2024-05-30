@@ -86,53 +86,9 @@ func (h *DnsHeader) Print() {
 
 // ---
 
-type DnsQuestion struct {
-	qname  QName
-	qtype  [2]byte
-	qclass [2]byte
-}
-
-func (q *DnsQuestion) Marshal(b []byte) error {
-  reader := bytes.NewReader(b)
-
-	q.qname = make([]byte, len(b)-4)
-	if _, err := reader.Read(q.qname); err != nil {
-		return err
-	}
-
-	if _, err := reader.Read(q.qtype[:]); err != nil {
-		return err
-	}
-
-	if _, err := reader.Read(q.qclass[:]); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (q *DnsQuestion) Unmarshal() []byte {
-	buf := make([]byte, 0)
-
-	buf = append(buf, q.qname[:]...)
-	buf = append(buf, q.qtype[:]...)
-	buf = append(buf, q.qclass[:]...)
-
-	return buf
-}
-
-func (q *DnsQuestion) Print() {
-  fmt.Println("Question")
-  fmt.Printf("  QNMAE:     %s\n", q.qname.String())
-  fmt.Printf("  QTYPE:     0x%s\n", hex.EncodeToString(q.qtype[:]))
-  fmt.Printf("  QCLASS:    0x%s\n", hex.EncodeToString(q.qclass[:]))
-}
-
-// ---
-
 type DnsPacket struct {
 	header     DnsHeader
-	question   DnsQuestion
+	question   []DnsQuestion
 	answer     []DnsResourceRecord // Not used for simplicity
 	authority  []DnsResourceRecord // Not used for simplicity
 	additional []DnsResourceRecord
@@ -144,7 +100,11 @@ type DnsPacket struct {
  */
 func (p *DnsPacket) Marshal(b []byte) error {
   if err := p.header.Marshal(b[:11]); err != nil { return err }
-  if err := p.question.Marshal(b[12:]); err != nil { return err }
+
+  q := new(DnsQuestion)
+  if err := q.Marshal(b[12:]); err != nil { return err }
+  p.question = append(p.question, *q)
+
 	return nil
 }
 
@@ -152,7 +112,10 @@ func (p *DnsPacket) Unmarshal() []byte {
 	buf := make([]byte, 0)
 
 	buf = append(buf, p.header.Unmarshal()...)
-	buf = append(buf, p.question.Unmarshal()...)
+
+  for _, q := range p.question {
+	  buf = append(buf, q.Unmarshal()...)
+  }
 
 	for _, rr := range p.answer {
 		buf = append(buf, rr.Unmarshal()...)
@@ -171,7 +134,11 @@ func (p *DnsPacket) Unmarshal() []byte {
 
 func (p *DnsPacket) Print() {
   p.header.Print()
-  p.question.Print()
+
+  for i, q := range p.question {
+    fmt.Printf("Question #%d\n", i)
+    q.Print()
+  }
 
 	for i, rr := range p.answer {
     fmt.Printf("Answer Rerouces Record #%d\n", i)
