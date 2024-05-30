@@ -6,9 +6,11 @@ import (
 )
 
 func main() {
+	nonce := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	ad := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+
 	var packetHex string
 	var aesKey string
-
 	fmt.Println("Packet string (hex): ")
 	fmt.Scanln(&packetHex)
 	fmt.Println("AES key (256): ")
@@ -27,19 +29,14 @@ func main() {
 
 	padding := new(DnsRROPT)
 	padding.FillZero(512 - len(b) - 4)
-	packet.additional = append(packet.additional, padding)
+  packet.AppendAdditionalRR(padding)
 
-	if err := Encode0x20(packet); err != nil {
+	if err := packet.question[0].Encode0x20(); err != nil {
 		fmt.Println("error:", err)
 		return
 	}
 
-	fmt.Println("0x20:", packet.question.qname.String())
-	fmt.Println("len:", len(packet.Unmarshal()))
-	fmt.Println("packet (unmarshal):", packet.Unmarshal())
-
-	nonce := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-	ad := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+  packet.Print()
 
 	cipher, err := EncryptAES256GCM([]byte(aesKey), nonce, packet.Unmarshal(), ad)
 	if err != nil {
