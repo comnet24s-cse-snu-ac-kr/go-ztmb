@@ -8,8 +8,10 @@
 
 ```bash
 make
-./example.sh
+./ztmb ./example/input.json
 ```
+
+- Input/Output JSON file examples are available in [/example](./example) dir
 
 ### Pre-built binaries
 

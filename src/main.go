@@ -6,17 +6,13 @@ import (
 )
 
 func main() {
-	nonce := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-	ad := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+  input := new(Input)
+  if err := input.ReadJsonFile(); err != nil {
+		fmt.Println("error:", err)
+		return
+  }
 
-	var packetHex string
-	var aesKey string
-	fmt.Println("Packet string (hex): ")
-	fmt.Scanln(&packetHex)
-	fmt.Println("AES key (256): ")
-	fmt.Scanln(&aesKey)
-
-	b, err := hex.DecodeString(packetHex)
+	b, err := hex.DecodeString(input.Packet)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
@@ -38,12 +34,13 @@ func main() {
 
   packet.Print()
 
-	cipher, err := EncryptAES256GCM([]byte(aesKey), nonce, packet.Unmarshal(), ad)
+	cipher, err := EncryptAES256GCM([]byte(input.AesKey), []byte(input.Nonce), packet.Unmarshal(), []byte(input.AdditionalData))
 	if err != nil {
 		fmt.Println("error:", err)
 		return
 	}
 
-	fmt.Println("Cipher:", hex.EncodeToString(cipher))
-	fmt.Println("Cipher len:", len(cipher))
+  fmt.Println("Cipher")
+	fmt.Printf("  Hex:     %s\n", hex.EncodeToString(cipher))
+	fmt.Printf("  Length:  %d\n", len(cipher))
 }
