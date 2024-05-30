@@ -47,8 +47,8 @@ func (rr *DnsRROPT) Unmarshal() []byte {
 }
 
 func (rr *DnsRROPT) FillZero(size int) {
-	binary.LittleEndian.PutUint16(rr.optionCode[:], OPT_CODE_PADDING)
-	binary.LittleEndian.PutUint16(rr.optionLength[:], uint16(size))
+	binary.BigEndian.PutUint16(rr.optionCode[:], OPT_CODE_PADDING)
+	binary.BigEndian.PutUint16(rr.optionLength[:], uint16(size))
 	rr.padding = bytes.Repeat([]byte{0}, size)
 }
 
