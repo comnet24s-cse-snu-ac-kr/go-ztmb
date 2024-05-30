@@ -34,7 +34,7 @@ func (qn *QName) String() string {
 type DnsResourceRecord interface {
 	Marshal(b []byte) error
 	Unmarshal() []byte
-  Print()
+	Print()
 }
 
 // ---
@@ -49,16 +49,28 @@ type DnsHeader struct {
 }
 
 func (h *DnsHeader) Marshal(b []byte) error {
-  reader := bytes.NewReader(b)
+	reader := bytes.NewReader(b)
 
-	if _, err := reader.Read(h.id[:]); err != nil { return err }
-	if _, err := reader.Read(h.flags[:]); err != nil { return err }
-	if _, err := reader.Read(h.qdcount[:]); err != nil { return err }
-	if _, err := reader.Read(h.ancount[:]); err != nil { return err }
-	if _, err := reader.Read(h.nscount[:]); err != nil { return err }
-	if _, err := reader.Read(h.arcount[:]); err != nil { return err }
+	if _, err := reader.Read(h.id[:]); err != nil {
+		return err
+	}
+	if _, err := reader.Read(h.flags[:]); err != nil {
+		return err
+	}
+	if _, err := reader.Read(h.qdcount[:]); err != nil {
+		return err
+	}
+	if _, err := reader.Read(h.ancount[:]); err != nil {
+		return err
+	}
+	if _, err := reader.Read(h.nscount[:]); err != nil {
+		return err
+	}
+	if _, err := reader.Read(h.arcount[:]); err != nil {
+		return err
+	}
 
-  return nil
+	return nil
 }
 
 func (h *DnsHeader) Unmarshal() []byte {
@@ -75,13 +87,13 @@ func (h *DnsHeader) Unmarshal() []byte {
 }
 
 func (h *DnsHeader) Print() {
-  fmt.Println("Header")
-  fmt.Printf("  ID:        0x%s\n", hex.EncodeToString(h.id[:]))
-  fmt.Printf("  Flags:     %b %b\n", h.flags[0], h.flags[1])
-  fmt.Printf("  QDCOUNT:   0x%s\n", hex.EncodeToString(h.qdcount[:]))
-  fmt.Printf("  ANCOUNT:   0x%s\n", hex.EncodeToString(h.ancount[:]))
-  fmt.Printf("  NSCOUNT:   0x%s\n", hex.EncodeToString(h.nscount[:]))
-  fmt.Printf("  ARCOUNT:   0x%s\n", hex.EncodeToString(h.arcount[:]))
+	fmt.Println("Header")
+	fmt.Printf("  ID:        0x%s\n", hex.EncodeToString(h.id[:]))
+	fmt.Printf("  Flags:     %b %b\n", h.flags[0], h.flags[1])
+	fmt.Printf("  QDCOUNT:   0x%s\n", hex.EncodeToString(h.qdcount[:]))
+	fmt.Printf("  ANCOUNT:   0x%s\n", hex.EncodeToString(h.ancount[:]))
+	fmt.Printf("  NSCOUNT:   0x%s\n", hex.EncodeToString(h.nscount[:]))
+	fmt.Printf("  ARCOUNT:   0x%s\n", hex.EncodeToString(h.arcount[:]))
 }
 
 // ---
@@ -99,11 +111,15 @@ type DnsPacket struct {
  * @return  []byte
  */
 func (p *DnsPacket) Marshal(b []byte) error {
-  if err := p.header.Marshal(b[:11]); err != nil { return err }
+	if err := p.header.Marshal(b[:11]); err != nil {
+		return err
+	}
 
-  q := new(DnsQuestion)
-  if err := q.Marshal(b[12:]); err != nil { return err }
-  p.question = append(p.question, *q)
+	q := new(DnsQuestion)
+	if err := q.Marshal(b[12:]); err != nil {
+		return err
+	}
+	p.question = append(p.question, *q)
 
 	return nil
 }
@@ -113,9 +129,9 @@ func (p *DnsPacket) Unmarshal() []byte {
 
 	buf = append(buf, p.header.Unmarshal()...)
 
-  for _, q := range p.question {
-	  buf = append(buf, q.Unmarshal()...)
-  }
+	for _, q := range p.question {
+		buf = append(buf, q.Unmarshal()...)
+	}
 
 	for _, rr := range p.answer {
 		buf = append(buf, rr.Unmarshal()...)
@@ -133,31 +149,31 @@ func (p *DnsPacket) Unmarshal() []byte {
 }
 
 func (p *DnsPacket) Print() {
-  p.header.Print()
+	p.header.Print()
 
-  for i, q := range p.question {
-    fmt.Printf("Question #%d\n", i)
-    q.Print()
-  }
+	for i, q := range p.question {
+		fmt.Printf("Question #%d\n", i)
+		q.Print()
+	}
 
 	for i, rr := range p.answer {
-    fmt.Printf("Answer Rerouces Record #%d\n", i)
-    rr.Print()
+		fmt.Printf("Answer Rerouces Record #%d\n", i)
+		rr.Print()
 	}
 
 	for i, rr := range p.authority {
-    fmt.Printf("Authority Rerouces Record #%d\n", i)
-    rr.Print()
+		fmt.Printf("Authority Rerouces Record #%d\n", i)
+		rr.Print()
 	}
 
 	for i, rr := range p.additional {
-    fmt.Printf("Additional Rerouces Record #%d\n", i)
-    rr.Print()
+		fmt.Printf("Additional Rerouces Record #%d\n", i)
+		rr.Print()
 	}
 }
 
 func (p *DnsPacket) AppendAdditionalRR(rr DnsResourceRecord) {
-  arcount := binary.BigEndian.Uint16(p.header.arcount[:])
-  binary.BigEndian.PutUint16(p.header.arcount[:], arcount + 1)
-  p.additional = append(p.additional, rr)
+	arcount := binary.BigEndian.Uint16(p.header.arcount[:])
+	binary.BigEndian.PutUint16(p.header.arcount[:], arcount+1)
+	p.additional = append(p.additional, rr)
 }

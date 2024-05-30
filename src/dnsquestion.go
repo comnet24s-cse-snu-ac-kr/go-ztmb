@@ -1,9 +1,9 @@
 package main
 
 import (
-  "bytes"
-  "fmt"
-  "encoding/hex"
+	"bytes"
+	"encoding/hex"
+	"fmt"
 	"github.com/iden3/go-iden3-crypto/poseidon"
 )
 
@@ -14,7 +14,7 @@ type DnsQuestion struct {
 }
 
 func (q *DnsQuestion) Marshal(b []byte) error {
-  reader := bytes.NewReader(b)
+	reader := bytes.NewReader(b)
 
 	q.qname = make([]byte, len(b)-4)
 	if _, err := reader.Read(q.qname); err != nil {
@@ -43,10 +43,10 @@ func (q *DnsQuestion) Unmarshal() []byte {
 }
 
 func (q *DnsQuestion) Print() {
-  fmt.Println("Question")
-  fmt.Printf("  QNMAE:     %s\n", q.qname.String())
-  fmt.Printf("  QTYPE:     0x%s\n", hex.EncodeToString(q.qtype[:]))
-  fmt.Printf("  QCLASS:    0x%s\n", hex.EncodeToString(q.qclass[:]))
+	fmt.Println("Question")
+	fmt.Printf("  QNMAE:     %s\n", q.qname.String())
+	fmt.Printf("  QTYPE:     0x%s\n", hex.EncodeToString(q.qtype[:]))
+	fmt.Printf("  QCLASS:    0x%s\n", hex.EncodeToString(q.qclass[:]))
 }
 
 func (q *DnsQuestion) Encode0x20() error {

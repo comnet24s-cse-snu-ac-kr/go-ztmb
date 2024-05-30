@@ -31,6 +31,6 @@ func EncryptAES256GCM(key, nonce, plaintext []byte) ([]byte, error) {
 		return nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", AES_NONCE_BYTES))
 	}
 
-  // Do not use `AdditionalData` for simplicity
+	// Do not use `AdditionalData` for simplicity
 	return gcm.Seal(nil, nonce, plaintext, nil), nil
 }
