@@ -49,5 +49,5 @@ Cipher
 ### Pre-built binaries
 
 - Pre-built binaries are available in [/build](./build) dir
-    - `build/zkmbx-darwin-amd64`: x86_64 binary
-    - `build/zkmbx-darwin-arm64`: ARM64 binary
+    - `build/ztmb-darwin-amd64`: x86_64 binary
+    - `build/ztmb-darwin-arm64`: ARM64 binary
