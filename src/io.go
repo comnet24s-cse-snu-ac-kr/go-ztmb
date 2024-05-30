@@ -13,14 +13,12 @@ type Input struct {
   Packet []byte
   AesKey []byte
   Nonce []byte
-  AdditionalData []byte
 }
 
 type inputJson struct {
   Packet string `json:"packet"`
   AesKey string `json:"aes-key"`
   Nonce string `json:"nonce"`
-  AdditionalData string `json:"additional-data"`
 }
 
 func (input *Input) ReadJsonFile() error {
@@ -45,9 +43,6 @@ func (input *Input) ReadJsonFile() error {
     return err
   }
   if input.Nonce, err = hex.DecodeString(rawJson.Nonce); err != nil {
-    return err
-  }
-  if input.AdditionalData, err = hex.DecodeString(rawJson.AdditionalData); err != nil {
     return err
   }
 

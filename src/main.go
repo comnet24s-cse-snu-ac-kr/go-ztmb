@@ -35,7 +35,7 @@ func main() {
 
   output.Key = input.AesKey
   output.Nonce = input.Nonce
-	cipher, err := EncryptAES256GCM(input.AesKey, input.Nonce, packet.Unmarshal(), input.AdditionalData)
+	cipher, err := EncryptAES256GCM(input.AesKey, input.Nonce, packet.Unmarshal())
 	if err != nil {
 		fmt.Println("error:", err)
 		return
