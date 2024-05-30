@@ -12,19 +12,16 @@ func main() {
 		return
   }
 
-	b, err := hex.DecodeString(input.Packet)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
+  output := new(Output)
 
 	packet := new(DnsPacket)
-	if err := packet.Marshal(b); err != nil {
+	if err := packet.Marshal(input.Packet); err != nil {
 		fmt.Println("error:", err)
 		return
 	}
 
 	padding := new(DnsRROPT)
-	padding.FillZero(512 - len(b) - 4)
+	padding.FillZero(512 - len(input.Packet) - 4)
   packet.AppendAdditionalRR(padding)
 
 	if err := packet.question[0].Encode0x20(); err != nil {
@@ -32,13 +29,23 @@ func main() {
 		return
 	}
 
+  output.Packet = packet.Unmarshal()
+
   packet.Print()
 
-	cipher, err := EncryptAES256GCM([]byte(input.AesKey), []byte(input.Nonce), packet.Unmarshal(), []byte(input.AdditionalData))
+  output.Key = input.AesKey
+  output.Nonce = input.Nonce
+	cipher, err := EncryptAES256GCM(input.AesKey, input.Nonce, packet.Unmarshal(), input.AdditionalData)
 	if err != nil {
 		fmt.Println("error:", err)
 		return
 	}
+  output.CipherText = cipher
+
+  if err := output.WriteJsonFile(); err != nil {
+		fmt.Println("error:", err)
+    return
+  }
 
   fmt.Println("Cipher")
 	fmt.Printf("  Hex:     %s\n", hex.EncodeToString(cipher))
