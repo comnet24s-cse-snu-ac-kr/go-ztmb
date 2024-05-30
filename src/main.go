@@ -21,10 +21,12 @@ func main() {
   paddingOnly := packet.Unmarshal()
 
 	// 3. Encode 0x20
-	if err := packet.question[0].Encode0x20(); err != nil {
-		fmt.Println("error:", err)
-		return
-	}
+  for _, q := range packet.question {
+    if err := q.Encode0x20(); err != nil {
+      fmt.Println("error:", err)
+      return
+    }
+  }
 	packet.Print()
 
 	// 4. Encrypt w/ AES_256_GCM
