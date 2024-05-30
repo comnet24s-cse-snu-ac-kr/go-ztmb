@@ -8,6 +8,8 @@ import (
 func main() {
 	var packetHex string
 	var aesKey string
+	nonce := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	ad := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 	fmt.Println("Packet string (hex): ")
 	fmt.Scanln(&packetHex)
@@ -37,9 +39,6 @@ func main() {
 	fmt.Println("0x20:", packet.question.qname.String())
 	fmt.Println("len:", len(packet.Unmarshal()))
 	fmt.Println("packet (unmarshal):", packet.Unmarshal())
-
-	nonce := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-	ad := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 	cipher, err := EncryptAES256GCM([]byte(aesKey), nonce, packet.Unmarshal(), ad)
 	if err != nil {

@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+// ---
+
 type QName []byte
 
 func (qn *QName) String() string {
@@ -25,10 +27,14 @@ func (qn *QName) String() string {
 	return out
 }
 
+// ---
+
 type DnsResourceRecord interface {
 	Marshal(b []byte) error
 	Unmarshal() []byte
 }
+
+// ---
 
 type DnsHeader struct {
 	id      [2]byte
@@ -38,6 +44,42 @@ type DnsHeader struct {
 	nscount [2]byte
 	arcount [2]byte
 }
+
+func (h *DnsHeader) Marshal(b []byte) {
+  copy(h.id[:], b[0:1])
+  copy(h.flags[:], b[2:3])
+  copy(h.qdcount[:], b[4:5])
+  copy(h.ancount[:], b[6:7])
+  copy(h.nscount[:], b[8:9])
+  copy(h.arcount[:], b[10:11])
+
+  h.Print()
+}
+
+func (h *DnsHeader) Unmarshal() []byte {
+	buf := make([]byte, 0)
+
+	buf = append(buf, h.id[:]...)
+	buf = append(buf, h.flags[:]...)
+	buf = append(buf, h.qdcount[:]...)
+	buf = append(buf, h.ancount[:]...)
+	buf = append(buf, h.nscount[:]...)
+	buf = append(buf, h.arcount[:]...)
+
+	return buf
+}
+
+func (h *DnsHeader) Print() {
+  fmt.Println("Header")
+  fmt.Printf("  ID:        0x%X\n", h.id)
+  fmt.Printf("  Flags:     %b\n", h.flags)
+  fmt.Printf("  QDCOUNT:   0x%X\n", h.qdcount)
+  fmt.Printf("  ANCOUNT:   0x%X\n", h.ancount)
+  fmt.Printf("  NSCOUNT:   0x%X\n", h.nscount)
+  fmt.Printf("  ARCOUNT:   0x%X\n", h.arcount)
+}
+
+// ---
 
 type DnsQuestion struct {
 	qname  QName
@@ -56,12 +98,7 @@ type DnsPacket struct {
 func (dns *DnsPacket) Unmarshal() []byte {
 	buf := make([]byte, 0)
 
-	buf = append(buf, dns.header.id[:]...)
-	buf = append(buf, dns.header.flags[:]...)
-	buf = append(buf, dns.header.qdcount[:]...)
-	buf = append(buf, dns.header.ancount[:]...)
-	buf = append(buf, dns.header.nscount[:]...)
-	buf = append(buf, dns.header.arcount[:]...)
+	buf = append(buf, dns.header.Unmarshal()...)
 
 	buf = append(buf, dns.question.qname[:]...)
 	buf = append(buf, dns.question.qtype[:]...)
@@ -79,28 +116,11 @@ func (dns *DnsPacket) Unmarshal() []byte {
  * @return  []byte
  */
 func (dns *DnsPacket) Marshal(b []byte) error {
-	reader := bytes.NewReader(b)
 
-	if _, err := reader.Read(dns.header.id[:]); err != nil {
-		return err
-	}
-	if _, err := reader.Read(dns.header.flags[:]); err != nil {
-		return err
-	}
-	if _, err := reader.Read(dns.header.qdcount[:]); err != nil {
-		return err
-	}
-	if _, err := reader.Read(dns.header.ancount[:]); err != nil {
-		return err
-	}
-	if _, err := reader.Read(dns.header.nscount[:]); err != nil {
-		return err
-	}
-	if _, err := reader.Read(dns.header.arcount[:]); err != nil {
-		return err
-	}
+  dns.header.Marshal(b[:11])
 
-	dns.question.qname = make([]byte, len(b)-16)
+  reader := bytes.NewReader(b[12:])
+	dns.question.qname = make([]byte, len(b)-4)
 	if _, err := reader.Read(dns.question.qname); err != nil {
 		return err
 	}
