@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"fmt"
 )
 
@@ -30,18 +29,15 @@ func main() {
 	packet.Print()
 
 	// 4. Encrypt w/ AES_256_GCM
-	cipher, err := aes.Encrypt(packet.Unmarshal())
-	if err != nil {
+	if err := aes.Encrypt(packet.Unmarshal()); err != nil {
 		fmt.Println("error:", err)
 		return
 	}
-	fmt.Println("Cipher")
-	fmt.Printf("  Hex:     %s\n", hex.EncodeToString(cipher))
-	fmt.Printf("  Length:  %d\n", len(cipher))
+  aes.Print()
 
 	// 5. Output
   output := new(OutputJson)
-	if err := output.WriteFile(paddingOnly, cipher, aes); err != nil {
+	if err := output.WriteFile(paddingOnly, aes.cipher, aes); err != nil {
 		fmt.Println("error:", err)
 		return
 	}
