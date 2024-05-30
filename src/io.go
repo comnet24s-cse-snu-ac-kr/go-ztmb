@@ -11,7 +11,7 @@ import (
 
 type InputJson struct {
 	Packet string `json:"packet"`
-	Key string `json:"key"`
+	Key    string `json:"key"`
 	Nonce  string `json:"nonce"`
 
 	// Note that the word "couter" indicates suffix for PreCounterBlock (J0)
@@ -34,14 +34,14 @@ func (input *InputJson) ReadFile() (*DnsPacket, *AESGCM, error) {
 		return nil, nil, err
 	}
 
-  dns := new(DnsPacket)
-  if packet, err := hex.DecodeString(input.Packet); err != nil {
+	dns := new(DnsPacket)
+	if packet, err := hex.DecodeString(input.Packet); err != nil {
 		return nil, nil, err
 	} else {
-    dns.Marshal(packet)
-  }
+		dns.Marshal(packet)
+	}
 
-  aes := new(AESGCM)
+	aes := new(AESGCM)
 	if aes.key, err = hex.DecodeString(input.Key); err != nil {
 		return nil, nil, err
 	}

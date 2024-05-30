@@ -14,10 +14,10 @@ const (
 )
 
 type AESGCM struct {
-  key []byte
-  nonce []byte
-  preCounterBlockSuffix []byte
-  cipher []byte
+	key                   []byte
+	nonce                 []byte
+	preCounterBlockSuffix []byte
+	cipher                []byte
 }
 
 func (ag *AESGCM) Encrypt(plaintext []byte) error {
@@ -41,7 +41,7 @@ func (ag *AESGCM) Encrypt(plaintext []byte) error {
 
 	// Do not use `AdditionalData` for simplicity
 	ag.cipher = gcm.Seal(nil, ag.nonce, plaintext, nil)
-  return nil
+	return nil
 }
 
 func (ag *AESGCM) Print() {
