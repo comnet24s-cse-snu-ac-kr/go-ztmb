@@ -20,4 +20,10 @@
 # Go workspace file
 go.work
 go.work.sum
-zkmbx
+
+# Build & run result
+ztmb
+result.json
+
+# Helper scripts
+*.sh

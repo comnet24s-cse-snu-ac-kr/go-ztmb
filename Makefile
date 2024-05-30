@@ -1,4 +1,4 @@
-BINARY := zkmbx
+BINARY := ztmb
 GO_FILES := $(wildcard src/*.go)
 BUILD := build
 
