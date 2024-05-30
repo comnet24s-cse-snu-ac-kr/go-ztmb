@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
+	"fmt"
 )
 
 const (
@@ -48,4 +50,11 @@ func (rr *DnsRROPT) FillZero(size int) {
 	binary.LittleEndian.PutUint16(rr.optionCode[:], OPT_CODE_PADDING)
 	binary.LittleEndian.PutUint16(rr.optionLength[:], uint16(size))
 	rr.padding = bytes.Repeat([]byte{0}, size)
+}
+
+func (rr DnsRROPT) Print() {
+  fmt.Println("RR OPT")
+  fmt.Printf("  OPTCODE:  0x%s\n", hex.EncodeToString(rr.optionCode[:]))
+  fmt.Printf("  OPTLEN:   0x%s\n", hex.EncodeToString(rr.optionLength[:]))
+  fmt.Printf("  PADDING:  0x%s\n", hex.EncodeToString(rr.padding[:]))
 }

@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 )
 
@@ -32,6 +34,7 @@ func (qn *QName) String() string {
 type DnsResourceRecord interface {
 	Marshal(b []byte) error
 	Unmarshal() []byte
+  Print()
 }
 
 // ---
@@ -45,15 +48,17 @@ type DnsHeader struct {
 	arcount [2]byte
 }
 
-func (h *DnsHeader) Marshal(b []byte) {
-  copy(h.id[:], b[0:1])
-  copy(h.flags[:], b[2:3])
-  copy(h.qdcount[:], b[4:5])
-  copy(h.ancount[:], b[6:7])
-  copy(h.nscount[:], b[8:9])
-  copy(h.arcount[:], b[10:11])
+func (h *DnsHeader) Marshal(b []byte) error {
+  reader := bytes.NewReader(b)
 
-  h.Print()
+	if _, err := reader.Read(h.id[:]); err != nil { return err }
+	if _, err := reader.Read(h.flags[:]); err != nil { return err }
+	if _, err := reader.Read(h.qdcount[:]); err != nil { return err }
+	if _, err := reader.Read(h.ancount[:]); err != nil { return err }
+	if _, err := reader.Read(h.nscount[:]); err != nil { return err }
+	if _, err := reader.Read(h.arcount[:]); err != nil { return err }
+
+  return nil
 }
 
 func (h *DnsHeader) Unmarshal() []byte {
@@ -71,12 +76,12 @@ func (h *DnsHeader) Unmarshal() []byte {
 
 func (h *DnsHeader) Print() {
   fmt.Println("Header")
-  fmt.Printf("  ID:        0x%X\n", h.id)
-  fmt.Printf("  Flags:     %b\n", h.flags)
-  fmt.Printf("  QDCOUNT:   0x%X\n", h.qdcount)
-  fmt.Printf("  ANCOUNT:   0x%X\n", h.ancount)
-  fmt.Printf("  NSCOUNT:   0x%X\n", h.nscount)
-  fmt.Printf("  ARCOUNT:   0x%X\n", h.arcount)
+  fmt.Printf("  ID:        0x%s\n", hex.EncodeToString(h.id[:]))
+  fmt.Printf("  Flags:     %b %b\n", h.flags[0], h.flags[1])
+  fmt.Printf("  QDCOUNT:   0x%s\n", hex.EncodeToString(h.qdcount[:]))
+  fmt.Printf("  ANCOUNT:   0x%s\n", hex.EncodeToString(h.ancount[:]))
+  fmt.Printf("  NSCOUNT:   0x%s\n", hex.EncodeToString(h.nscount[:]))
+  fmt.Printf("  ARCOUNT:   0x%s\n", hex.EncodeToString(h.arcount[:]))
 }
 
 // ---
@@ -87,6 +92,44 @@ type DnsQuestion struct {
 	qclass [2]byte
 }
 
+func (q *DnsQuestion) Marshal(b []byte) error {
+  reader := bytes.NewReader(b)
+
+	q.qname = make([]byte, len(b)-4)
+	if _, err := reader.Read(q.qname); err != nil {
+		return err
+	}
+
+	if _, err := reader.Read(q.qtype[:]); err != nil {
+		return err
+	}
+
+	if _, err := reader.Read(q.qclass[:]); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (q *DnsQuestion) Unmarshal() []byte {
+	buf := make([]byte, 0)
+
+	buf = append(buf, q.qname[:]...)
+	buf = append(buf, q.qtype[:]...)
+	buf = append(buf, q.qclass[:]...)
+
+	return buf
+}
+
+func (q *DnsQuestion) Print() {
+  fmt.Println("Question")
+  fmt.Printf("  QNMAE:     %s\n", q.qname.String())
+  fmt.Printf("  QTYPE:     0x%s\n", hex.EncodeToString(q.qtype[:]))
+  fmt.Printf("  QCLASS:    0x%s\n", hex.EncodeToString(q.qclass[:]))
+}
+
+// ---
+
 type DnsPacket struct {
 	header     DnsHeader
 	question   DnsQuestion
@@ -95,42 +138,59 @@ type DnsPacket struct {
 	additional []DnsResourceRecord
 }
 
-func (dns *DnsPacket) Unmarshal() []byte {
+/**
+ * @arg     []byte    Assume that the packet has header and question field only
+ * @return  []byte
+ */
+func (p *DnsPacket) Marshal(b []byte) error {
+  if err := p.header.Marshal(b[:11]); err != nil { return err }
+  if err := p.question.Marshal(b[12:]); err != nil { return err }
+	return nil
+}
+
+func (p *DnsPacket) Unmarshal() []byte {
 	buf := make([]byte, 0)
 
-	buf = append(buf, dns.header.Unmarshal()...)
+	buf = append(buf, p.header.Unmarshal()...)
+	buf = append(buf, p.question.Unmarshal()...)
 
-	buf = append(buf, dns.question.qname[:]...)
-	buf = append(buf, dns.question.qtype[:]...)
-	buf = append(buf, dns.question.qclass[:]...)
+	for _, rr := range p.answer {
+		buf = append(buf, rr.Unmarshal()...)
+	}
 
-	for _, a := range dns.additional {
-		buf = append(buf, a.Unmarshal()...)
+	for _, rr := range p.authority {
+		buf = append(buf, rr.Unmarshal()...)
+	}
+
+	for _, rr := range p.additional {
+		buf = append(buf, rr.Unmarshal()...)
 	}
 
 	return buf
 }
 
-/**
- * @arg     []byte    Assume that the packet has header and question field only
- * @return  []byte
- */
-func (dns *DnsPacket) Marshal(b []byte) error {
+func (p *DnsPacket) Print() {
+  p.header.Print()
+  p.question.Print()
 
-  dns.header.Marshal(b[:11])
-
-  reader := bytes.NewReader(b[12:])
-	dns.question.qname = make([]byte, len(b)-4)
-	if _, err := reader.Read(dns.question.qname); err != nil {
-		return err
+	for i, rr := range p.answer {
+    fmt.Printf("Answer Rerouces Record #%d\n", i)
+    rr.Print()
 	}
 
-	if _, err := reader.Read(dns.question.qtype[:]); err != nil {
-		return err
-	}
-	if _, err := reader.Read(dns.question.qclass[:]); err != nil {
-		return err
+	for i, rr := range p.authority {
+    fmt.Printf("Authority Rerouces Record #%d\n", i)
+    rr.Print()
 	}
 
-	return nil
+	for i, rr := range p.additional {
+    fmt.Printf("Additional Rerouces Record #%d\n", i)
+    rr.Print()
+	}
+}
+
+func (p *DnsPacket) AppendAdditionalRR(rr DnsResourceRecord) {
+  arcount := binary.BigEndian.Uint16(p.header.arcount[:])
+  binary.BigEndian.PutUint16(p.header.arcount[:], arcount + 1)
+  p.additional = append(p.additional, rr)
 }
