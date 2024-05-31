@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-  chacha "golang.org/x/crypto/chacha20poly1305"
+	chacha "golang.org/x/crypto/chacha20poly1305"
 )
 
 const (
@@ -18,11 +18,11 @@ const (
 // ---
 
 type AEAD interface {
-  Encrypt(plaintext []byte) ([]byte, error)
-  Print()
-  Key() []byte
-  Nonce() []byte
-  PreCounterBlockSuffix() []byte
+	Encrypt(plaintext []byte) ([]byte, error)
+	Print()
+	Key() []byte
+	Nonce() []byte
+	PreCounterBlockSuffix() []byte
 }
 
 // ---
@@ -33,8 +33,8 @@ type aesParam struct {
 	preCounterBlockSuffix []byte
 }
 
-func (param *aesParam) Key() []byte { return param.key }
-func (param *aesParam) Nonce() []byte { return param.nonce }
+func (param *aesParam) Key() []byte                   { return param.key }
+func (param *aesParam) Nonce() []byte                 { return param.nonce }
 func (param *aesParam) PreCounterBlockSuffix() []byte { return param.preCounterBlockSuffix }
 
 func (param *aesParam) Encrypt(plaintext []byte) ([]byte, error) {
@@ -75,8 +75,8 @@ type chachaPolyParam struct {
 	preCounterBlockSuffix []byte
 }
 
-func (param *chachaPolyParam) Key() []byte { return param.key }
-func (param *chachaPolyParam) Nonce() []byte { return param.nonce }
+func (param *chachaPolyParam) Key() []byte                   { return param.key }
+func (param *chachaPolyParam) Nonce() []byte                 { return param.nonce }
 func (param *chachaPolyParam) PreCounterBlockSuffix() []byte { return param.preCounterBlockSuffix }
 
 func (param *chachaPolyParam) Encrypt(plaintext []byte) ([]byte, error) {
@@ -88,7 +88,7 @@ func (param *chachaPolyParam) Encrypt(plaintext []byte) ([]byte, error) {
 		return nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", ENC_NONCE_BYTES))
 	}
 
-  aead, err := chacha.New(param.key)
+	aead, err := chacha.New(param.key)
 	if err != nil {
 		return nil, err
 	}
