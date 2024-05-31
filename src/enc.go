@@ -10,11 +10,6 @@ import (
 	chacha "golang.org/x/crypto/chacha20poly1305"
 )
 
-const (
-	ENC_KEY_BYTES   = 32
-	ENC_NONCE_BYTES = 12
-)
-
 // ---
 
 type AEAD interface {
@@ -27,6 +22,11 @@ type AEAD interface {
 
 // ---
 
+const (
+	AES_KEY_BYTES   = 32
+	AES_NONCE_BYTES = 12
+)
+
 type aesParam struct {
 	key                   []byte
 	nonce                 []byte
@@ -38,12 +38,12 @@ func (param *aesParam) Nonce() []byte                 { return param.nonce }
 func (param *aesParam) PreCounterBlockSuffix() []byte { return param.preCounterBlockSuffix }
 
 func (param *aesParam) Encrypt(plaintext []byte) ([]byte, error) {
-	if len(param.key) != ENC_KEY_BYTES {
-		return nil, errors.New(fmt.Sprintf("Key size mismatch (not %dbytes)", ENC_KEY_BYTES))
+	if len(param.key) != AES_KEY_BYTES {
+		return nil, errors.New(fmt.Sprintf("Key size mismatch (not %dbytes)", AES_KEY_BYTES))
 	}
 
-	if len(param.nonce) != ENC_NONCE_BYTES {
-		return nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", ENC_NONCE_BYTES))
+	if len(param.nonce) != AES_NONCE_BYTES {
+		return nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", AES_NONCE_BYTES))
 	}
 
 	block, err := aes.NewCipher(param.key)
@@ -80,12 +80,12 @@ func (param *chachaPolyParam) Nonce() []byte                 { return param.nonc
 func (param *chachaPolyParam) PreCounterBlockSuffix() []byte { return param.preCounterBlockSuffix }
 
 func (param *chachaPolyParam) Encrypt(plaintext []byte) ([]byte, error) {
-	if len(param.key) != ENC_KEY_BYTES {
-		return nil, errors.New(fmt.Sprintf("Key size mismatch (not %dbytes)", ENC_KEY_BYTES))
+	if len(param.key) != chacha.KeySize {
+		return nil, errors.New(fmt.Sprintf("Key size mismatch (not %dbytes)", chacha.KeySize))
 	}
 
-	if len(param.nonce) != ENC_NONCE_BYTES {
-		return nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", ENC_NONCE_BYTES))
+	if len(param.nonce) != chacha.NonceSize {
+		return nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", chacha.NonceSize))
 	}
 
 	aead, err := chacha.New(param.key)
