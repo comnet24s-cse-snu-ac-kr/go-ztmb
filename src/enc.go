@@ -6,49 +6,100 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+
+  chacha "golang.org/x/crypto/chacha20poly1305"
 )
 
 const (
-	AES_KEY_BYTES   = 32
-	AES_NONCE_BYTES = 12
+	ENC_KEY_BYTES   = 32
+	ENC_NONCE_BYTES = 12
 )
 
-type AESGCM struct {
+// ---
+
+type AEAD interface {
+  Encrypt(plaintext []byte) ([]byte, error)
+  Print()
+  Key() []byte
+  Nonce() []byte
+  PreCounterBlockSuffix() []byte
+}
+
+// ---
+
+type aesParam struct {
 	key                   []byte
 	nonce                 []byte
 	preCounterBlockSuffix []byte
-	cipher                []byte
 }
 
-func (ag *AESGCM) Encrypt(plaintext []byte) error {
-	if len(ag.key) != AES_KEY_BYTES {
-		return errors.New(fmt.Sprintf("AES key size mismatch (not %dbytes)", AES_KEY_BYTES))
+func (param *aesParam) Key() []byte { return param.key }
+func (param *aesParam) Nonce() []byte { return param.nonce }
+func (param *aesParam) PreCounterBlockSuffix() []byte { return param.preCounterBlockSuffix }
+
+func (param *aesParam) Encrypt(plaintext []byte) ([]byte, error) {
+	if len(param.key) != ENC_KEY_BYTES {
+		return nil, errors.New(fmt.Sprintf("Key size mismatch (not %dbytes)", ENC_KEY_BYTES))
 	}
 
-	block, err := aes.NewCipher(ag.key)
+	if len(param.nonce) != ENC_NONCE_BYTES {
+		return nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", ENC_NONCE_BYTES))
+	}
+
+	block, err := aes.NewCipher(param.key)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return err
-	}
-
-	if len(ag.nonce) != AES_NONCE_BYTES {
-		return errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", AES_NONCE_BYTES))
+		return nil, err
 	}
 
 	// Do not use `AdditionalData` for simplicity
-	ag.cipher = gcm.Seal(nil, ag.nonce, plaintext, nil)
-	return nil
+	return gcm.Seal(nil, param.nonce, plaintext, nil), nil
 }
 
-func (ag *AESGCM) Print() {
-	fmt.Printf("Cipher\n")
-	fmt.Printf("  Key:                    %s\n", hex.EncodeToString(ag.key))
-	fmt.Printf("  Nonce:                  %s\n", hex.EncodeToString(ag.nonce))
-	fmt.Printf("  PreCounterBlockSuffix:  %s\n", hex.EncodeToString(ag.preCounterBlockSuffix))
-	fmt.Printf("  Hex:                    %s\n", hex.EncodeToString(ag.cipher))
-	fmt.Printf("  Length:                 %d\n", len(ag.cipher))
+func (param *aesParam) Print() {
+	fmt.Printf("Cipher (AES-256-GCM)\n")
+	fmt.Printf("  Key:                    %s\n", hex.EncodeToString(param.key))
+	fmt.Printf("  Nonce:                  %s\n", hex.EncodeToString(param.nonce))
+	fmt.Printf("  PreCounterBlockSuffix:  %s\n", hex.EncodeToString(param.preCounterBlockSuffix))
+}
+
+// ---
+
+type chachaPolyParam struct {
+	key                   []byte
+	nonce                 []byte
+	preCounterBlockSuffix []byte
+}
+
+func (param *chachaPolyParam) Key() []byte { return param.key }
+func (param *chachaPolyParam) Nonce() []byte { return param.nonce }
+func (param *chachaPolyParam) PreCounterBlockSuffix() []byte { return param.preCounterBlockSuffix }
+
+func (param *chachaPolyParam) Encrypt(plaintext []byte) ([]byte, error) {
+	if len(param.key) != ENC_KEY_BYTES {
+		return nil, errors.New(fmt.Sprintf("Key size mismatch (not %dbytes)", ENC_KEY_BYTES))
+	}
+
+	if len(param.nonce) != ENC_NONCE_BYTES {
+		return nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", ENC_NONCE_BYTES))
+	}
+
+  aead, err := chacha.New(param.key)
+	if err != nil {
+		return nil, err
+	}
+
+	// Do not use `AdditionalData` for simplicity
+	return aead.Seal(nil, param.nonce, plaintext, nil), nil
+}
+
+func (param *chachaPolyParam) Print() {
+	fmt.Printf("Cipher (Chacha20Poly1305)\n")
+	fmt.Printf("  Key:                    %s\n", hex.EncodeToString(param.key))
+	fmt.Printf("  Nonce:                  %s\n", hex.EncodeToString(param.nonce))
+	fmt.Printf("  PreCounterBlockSuffix:  %s\n", hex.EncodeToString(param.preCounterBlockSuffix))
 }
