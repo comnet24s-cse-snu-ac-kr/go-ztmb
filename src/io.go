@@ -20,7 +20,7 @@ type InputJson struct {
 	Counter string `json:"counter"`
 }
 
-func (input *InputJson) ReadFile() (*DnsPacket, *AESGCM, error) {
+func (input *InputJson) ReadFile() (*DnsPacket, AEAD, error) {
 	if len(os.Args) != 2 {
 		return nil, nil, errors.New("Input JSON file not provided")
 	}
@@ -41,20 +41,22 @@ func (input *InputJson) ReadFile() (*DnsPacket, *AESGCM, error) {
 		dns.Marshal(packet)
 	}
 
-	aes := new(AESGCM)
-	if aes.key, err = hex.DecodeString(input.Key); err != nil {
+	// aead := new(aesParam)
+	aead := new(chachaPolyParam)
+
+	if aead.key, err = hex.DecodeString(input.Key); err != nil {
 		return nil, nil, err
 	}
 
-	if aes.nonce, err = hex.DecodeString(input.Nonce); err != nil {
+	if aead.nonce, err = hex.DecodeString(input.Nonce); err != nil {
 		return nil, nil, err
 	}
 
-	if aes.preCounterBlockSuffix, err = hex.DecodeString(input.Counter); err != nil {
+	if aead.preCounterBlockSuffix, err = hex.DecodeString(input.Counter); err != nil {
 		return nil, nil, err
 	}
 
-	return dns, aes, nil
+	return dns, aead, nil
 }
 
 // ---
@@ -69,10 +71,10 @@ type OutputJson struct {
 	Counter []string `json:"counter"`
 }
 
-func (output *OutputJson) WriteFile(packet, cipher []byte, aes *AESGCM) error {
-	output.Key = toStringSlice(aes.key)
-	output.Nonce = toStringSlice(aes.nonce)
-	output.Counter = toStringSlice(aes.preCounterBlockSuffix)
+func (output *OutputJson) WriteFile(packet, cipher []byte, aead AEAD) error {
+	output.Key = toStringSlice(aead.Key())
+	output.Nonce = toStringSlice(aead.Nonce())
+	output.Counter = toStringSlice(aead.PreCounterBlockSuffix())
 
 	output.Packet = toStringSlice(packet)
 	output.CipherText = toStringSlice(cipher)
