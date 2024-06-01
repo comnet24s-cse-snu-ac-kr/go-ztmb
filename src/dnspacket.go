@@ -42,12 +42,12 @@ func (qn *QName) Encode0x20() error {
       break
     }
     for j := 0; j < int(b[i]); j++ {
-      c := b[i+j+1]
-      if ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z') {
-        if digest.Bit(i+j+1) == 0 {
-          b[i+j+1] = c | 0x20
+      z := i+j+1
+      if ('A' <= b[z] && b[z] <= 'Z') || ('a' <= b[z] && b[z] <= 'z') {
+        if digest.Bit(z) == 0 {
+          b[z] = b[z] | 0x20
         } else {
-          b[i+j+1] = c &^ 0x20
+          b[z] = b[z] &^ 0x20
         }
       }
     }
