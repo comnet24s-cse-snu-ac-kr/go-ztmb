@@ -22,7 +22,7 @@ func main() {
 
 	// 3. Encode 0x20
 	for _, q := range packet.question {
-		if err := q.Encode0x20(); err != nil {
+		if err := q.qname.Encode0x20(); err != nil {
 			fmt.Println("error:", err)
 			return
 		}
