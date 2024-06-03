@@ -13,7 +13,7 @@ import (
 // ---
 
 const (
-  AEAD_TAG_SIZE = 16
+	AEAD_TAG_SIZE = 16
 )
 
 type AEAD interface {
@@ -61,8 +61,8 @@ func (param *aesParam) Encrypt(plaintext []byte) ([]byte, []byte, error) {
 	}
 
 	// Do not use `AdditionalData` for simplicity
-  c := gcm.Seal(nil, param.nonce, plaintext, nil)
-  return c[:len(c)-AEAD_TAG_SIZE], c[len(c)-AEAD_TAG_SIZE:], nil
+	c := gcm.Seal(nil, param.nonce, plaintext, nil)
+	return c[:len(c)-AEAD_TAG_SIZE], c[len(c)-AEAD_TAG_SIZE:], nil
 }
 
 func (param *aesParam) Print() {
@@ -99,8 +99,8 @@ func (param *chachaPolyParam) Encrypt(plaintext []byte) ([]byte, []byte, error) 
 	}
 
 	// Do not use `AdditionalData` for simplicity
-  c := aead.Seal(nil, param.nonce, plaintext, nil)
-  return c[:len(c)-AEAD_TAG_SIZE], c[len(c)-AEAD_TAG_SIZE:], nil
+	c := aead.Seal(nil, param.nonce, plaintext, nil)
+	return c[:len(c)-AEAD_TAG_SIZE], c[len(c)-AEAD_TAG_SIZE:], nil
 }
 
 func (param *chachaPolyParam) Print() {

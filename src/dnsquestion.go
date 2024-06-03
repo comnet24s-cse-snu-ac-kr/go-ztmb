@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/iden3/go-iden3-crypto/poseidon"
 )
 
 type DnsQuestion struct {
@@ -47,23 +46,4 @@ func (q *DnsQuestion) Print() {
 	fmt.Printf("  QNMAE:     %s\n", q.qname.String())
 	fmt.Printf("  QTYPE:     0x%s\n", hex.EncodeToString(q.qtype[:]))
 	fmt.Printf("  QCLASS:    0x%s\n", hex.EncodeToString(q.qclass[:]))
-}
-
-func (q *DnsQuestion) Encode0x20() error {
-	digest, err := poseidon.HashBytes(q.qname)
-	if err != nil {
-		return err
-	}
-
-	for i, b := range q.qname {
-		if ('A' <= b && b <= 'Z') || ('a' <= b && b <= 'z') {
-			if digest.Bit(i) == 0 {
-				q.qname[i] = b | 0x20
-			} else {
-				q.qname[i] = b &^ 0x20
-			}
-		}
-	}
-
-	return nil
 }
