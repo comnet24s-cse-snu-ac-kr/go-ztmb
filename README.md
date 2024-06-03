@@ -52,6 +52,12 @@ Cipher (AES-256-GCM)
 
 - Input/Output JSON file examples are available in [/example](./example) dir
 
+### Testing
+
+```bash
+make test
+```
+
 ### Pre-built binaries
 
 - Pre-built binaries are available in [/build](./build) dir

@@ -32,4 +32,7 @@ fmt:
 deps:
 	go mod tidy
 
+test:
+	go test ${GO_FILES} -v
+
 .PHONY: all build run clean test fmt lint deps help
