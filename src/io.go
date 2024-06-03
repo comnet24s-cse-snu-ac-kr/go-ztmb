@@ -41,8 +41,8 @@ func (input *InputJson) ReadFile() (*DnsPacket, AEAD, error) {
 		dns.Marshal(packet)
 	}
 
-	// aead := new(aesParam)
-	aead := new(chachaPolyParam)
+	aead := new(aesParam)
+	// aead := new(chachaPolyParam)
 
 	if aead.key, err = hex.DecodeString(input.Key); err != nil {
 		return nil, nil, err

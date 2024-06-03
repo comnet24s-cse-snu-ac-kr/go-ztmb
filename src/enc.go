@@ -12,8 +12,12 @@ import (
 
 // ---
 
+const (
+  AEAD_TAG_SIZE = 16
+)
+
 type AEAD interface {
-	Encrypt(plaintext []byte) ([]byte, error)
+	Encrypt(plaintext []byte) ([]byte, []byte, error)
 	Print()
 	Key() []byte
 	Nonce() []byte
@@ -37,27 +41,28 @@ func (param *aesParam) Key() []byte                   { return param.key }
 func (param *aesParam) Nonce() []byte                 { return param.nonce }
 func (param *aesParam) PreCounterBlockSuffix() []byte { return param.preCounterBlockSuffix }
 
-func (param *aesParam) Encrypt(plaintext []byte) ([]byte, error) {
+func (param *aesParam) Encrypt(plaintext []byte) ([]byte, []byte, error) {
 	if len(param.key) != AES_KEY_BYTES {
-		return nil, errors.New(fmt.Sprintf("Key size mismatch (not %dbytes)", AES_KEY_BYTES))
+		return nil, nil, errors.New(fmt.Sprintf("Key size mismatch (not %dbytes)", AES_KEY_BYTES))
 	}
 
 	if len(param.nonce) != AES_NONCE_BYTES {
-		return nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", AES_NONCE_BYTES))
+		return nil, nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", AES_NONCE_BYTES))
 	}
 
 	block, err := aes.NewCipher(param.key)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Do not use `AdditionalData` for simplicity
-	return gcm.Seal(nil, param.nonce, plaintext, nil), nil
+  c := gcm.Seal(nil, param.nonce, plaintext, nil)
+  return c[:len(c)-AEAD_TAG_SIZE], c[len(c)-AEAD_TAG_SIZE:], nil
 }
 
 func (param *aesParam) Print() {
@@ -79,22 +84,23 @@ func (param *chachaPolyParam) Key() []byte                   { return param.key 
 func (param *chachaPolyParam) Nonce() []byte                 { return param.nonce }
 func (param *chachaPolyParam) PreCounterBlockSuffix() []byte { return param.preCounterBlockSuffix }
 
-func (param *chachaPolyParam) Encrypt(plaintext []byte) ([]byte, error) {
+func (param *chachaPolyParam) Encrypt(plaintext []byte) ([]byte, []byte, error) {
 	if len(param.key) != chacha.KeySize {
-		return nil, errors.New(fmt.Sprintf("Key size mismatch (not %dbytes)", chacha.KeySize))
+		return nil, nil, errors.New(fmt.Sprintf("Key size mismatch (not %dbytes)", chacha.KeySize))
 	}
 
 	if len(param.nonce) != chacha.NonceSize {
-		return nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", chacha.NonceSize))
+		return nil, nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", chacha.NonceSize))
 	}
 
 	aead, err := chacha.New(param.key)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Do not use `AdditionalData` for simplicity
-	return aead.Seal(nil, param.nonce, plaintext, nil), nil
+  c := aead.Seal(nil, param.nonce, plaintext, nil)
+  return c[:len(c)-AEAD_TAG_SIZE], c[len(c)-AEAD_TAG_SIZE:], nil
 }
 
 func (param *chachaPolyParam) Print() {
