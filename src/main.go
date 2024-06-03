@@ -30,14 +30,15 @@ func main() {
 	packet.Print()
 
 	// 4. Encrypt w/ AES_256_GCM
-	cipher, err := aead.Encrypt(packet.Unmarshal())
+	cipher, tag, err := aead.Encrypt(packet.Unmarshal())
 	if err != nil {
 		fmt.Println("error:", err)
 		return
 	}
 	aead.Print()
-	fmt.Printf("  Hex:                    %s\n", hex.EncodeToString(cipher))
 	fmt.Printf("  Length:                 %d\n", len(cipher))
+	fmt.Printf("  Tag:                    %s\n", hex.EncodeToString(tag))
+	fmt.Printf("  Hex:                    %s\n", hex.EncodeToString(cipher))
 
 	// 5. Output
 	output := new(OutputJson)

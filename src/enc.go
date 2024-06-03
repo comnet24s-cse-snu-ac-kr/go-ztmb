@@ -13,7 +13,7 @@ import (
 // ---
 
 type AEAD interface {
-	Encrypt(plaintext []byte) ([]byte, error)
+	Encrypt(plaintext []byte) ([]byte, []byte, error)
 	Print()
 	Key() []byte
 	Nonce() []byte
