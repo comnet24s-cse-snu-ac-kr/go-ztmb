@@ -37,21 +37,21 @@ func (qn *QName) Encode0x20() error {
 		return err
 	}
 
-  for i:= 0; i < len(b); i += int(b[i]) + 1 {
-    if b[i] == 0 {
-      break
-    }
-    for j := 0; j < int(b[i]); j++ {
-      z := i+j+1
-      if ('A' <= b[z] && b[z] <= 'Z') || ('a' <= b[z] && b[z] <= 'z') {
-        if digest.Bit(z) == 0 {
-          b[z] = b[z] | 0x20
-        } else {
-          b[z] = b[z] &^ 0x20
-        }
-      }
-    }
-  }
+	for i := 0; i < len(b); i += int(b[i]) + 1 {
+		if b[i] == 0 {
+			break
+		}
+		for j := 0; j < int(b[i]); j++ {
+			z := i + j + 1
+			if ('A' <= b[z] && b[z] <= 'Z') || ('a' <= b[z] && b[z] <= 'z') {
+				if digest.Bit(z) == 0 {
+					b[z] = b[z] | 0x20
+				} else {
+					b[z] = b[z] &^ 0x20
+				}
+			}
+		}
+	}
 
 	return nil
 }
