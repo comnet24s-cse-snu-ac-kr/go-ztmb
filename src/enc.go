@@ -12,6 +12,10 @@ import (
 
 // ---
 
+const (
+  AEAD_TAG_SIZE = 16
+)
+
 type AEAD interface {
 	Encrypt(plaintext []byte) ([]byte, []byte, error)
 	Print()
@@ -37,27 +41,28 @@ func (param *aesParam) Key() []byte                   { return param.key }
 func (param *aesParam) Nonce() []byte                 { return param.nonce }
 func (param *aesParam) PreCounterBlockSuffix() []byte { return param.preCounterBlockSuffix }
 
-func (param *aesParam) Encrypt(plaintext []byte) ([]byte, error) {
+func (param *aesParam) Encrypt(plaintext []byte) ([]byte, []byte, error) {
 	if len(param.key) != AES_KEY_BYTES {
-		return nil, errors.New(fmt.Sprintf("Key size mismatch (not %dbytes)", AES_KEY_BYTES))
+		return nil, nil, errors.New(fmt.Sprintf("Key size mismatch (not %dbytes)", AES_KEY_BYTES))
 	}
 
 	if len(param.nonce) != AES_NONCE_BYTES {
-		return nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", AES_NONCE_BYTES))
+		return nil, nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", AES_NONCE_BYTES))
 	}
 
 	block, err := aes.NewCipher(param.key)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Do not use `AdditionalData` for simplicity
-	return gcm.Seal(nil, param.nonce, plaintext, nil), nil
+  c := gcm.Seal(nil, param.nonce, plaintext, nil)
+  return c[:len(c)-AEAD_TAG_SIZE], c[len(c)-AEAD_TAG_SIZE:], nil
 }
 
 func (param *aesParam) Print() {
@@ -95,7 +100,7 @@ func (param *chachaPolyParam) Encrypt(plaintext []byte) ([]byte, []byte, error) 
 
 	// Do not use `AdditionalData` for simplicity
   c := aead.Seal(nil, param.nonce, plaintext, nil)
-  return c[:len(c)-chacha.Overhead], c[len(c)-chacha.Overhead:], nil
+  return c[:len(c)-AEAD_TAG_SIZE], c[len(c)-AEAD_TAG_SIZE:], nil
 }
 
 func (param *chachaPolyParam) Print() {
