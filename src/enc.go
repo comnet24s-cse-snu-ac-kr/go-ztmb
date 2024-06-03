@@ -79,22 +79,23 @@ func (param *chachaPolyParam) Key() []byte                   { return param.key 
 func (param *chachaPolyParam) Nonce() []byte                 { return param.nonce }
 func (param *chachaPolyParam) PreCounterBlockSuffix() []byte { return param.preCounterBlockSuffix }
 
-func (param *chachaPolyParam) Encrypt(plaintext []byte) ([]byte, error) {
+func (param *chachaPolyParam) Encrypt(plaintext []byte) ([]byte, []byte, error) {
 	if len(param.key) != chacha.KeySize {
-		return nil, errors.New(fmt.Sprintf("Key size mismatch (not %dbytes)", chacha.KeySize))
+		return nil, nil, errors.New(fmt.Sprintf("Key size mismatch (not %dbytes)", chacha.KeySize))
 	}
 
 	if len(param.nonce) != chacha.NonceSize {
-		return nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", chacha.NonceSize))
+		return nil, nil, errors.New(fmt.Sprintf("Nonce size mismatch (not %dbyte)", chacha.NonceSize))
 	}
 
 	aead, err := chacha.New(param.key)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Do not use `AdditionalData` for simplicity
-	return aead.Seal(nil, param.nonce, plaintext, nil), nil
+  c := aead.Seal(nil, param.nonce, plaintext, nil)
+  return c[:len(c)-chacha.Overhead], c[len(c)-chacha.Overhead:], nil
 }
 
 func (param *chachaPolyParam) Print() {
