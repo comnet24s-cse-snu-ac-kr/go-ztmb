@@ -56,5 +56,5 @@ func (rr DnsRROPT) Print() {
 	fmt.Println("RR OPT")
 	fmt.Printf("  OPTCODE:  0x%s\n", hex.EncodeToString(rr.optionCode[:]))
 	fmt.Printf("  OPTLEN:   0x%s\n", hex.EncodeToString(rr.optionLength[:]))
-	fmt.Printf("  PADDING:\n%s\n", prettyBytes(rr.padding[:]))
+	fmt.Printf("  PADDING:\n%s\n", prettyBytes(rr.padding[:], 2))
 }
