@@ -1,4 +1,4 @@
-module github.com/comnet24s-cse-snu-ac-kr/logic-wo-zkp
+module github.com/comnet24s-cse-snu-ac-kr/go-ztmb-wo-zkp
 
 go 1.18
 
