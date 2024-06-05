@@ -35,10 +35,7 @@ func (qn *QName) Encode0x20() error {
 
 	// fit 255, fill 46
 	wdot := []byte("." + b.String())
-	padding := make([]byte, 255-len(wdot))
-	for i := 0; i < len(padding); i++ {
-		padding[i] = 46
-	}
+	padding := bytes.Repeat([]byte{46}, 255-len(wdot))
 	wdot = append(wdot, padding...)
 
 	digest, err := poseidon.HashBytesX(wdot, 9)
