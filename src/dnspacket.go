@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/iden3/go-iden3-crypto/poseidon"
 )
 
@@ -32,27 +33,31 @@ func (qn *QName) String() string {
 func (qn *QName) Encode0x20() error {
 	b := *qn
 
-	digest, err := poseidon.HashBytes(b)
+	// fit 255, fill 46
+	wdot := []byte("." + b.String())
+	padding := make([]byte, 255-len(wdot))
+	for i := 0; i < len(padding); i++ {
+		padding[i] = 46
+	}
+	wdot = append(wdot, padding...)
+
+	digest, err := poseidon.HashBytesX(wdot, 9)
 	if err != nil {
 		return err
 	}
 
-	for i := 0; i < len(b); i += int(b[i]) + 1 {
-		if b[i] == 0 {
-			break
+	for i, bi := range wdot {
+		if bi == 46 {
+			continue
 		}
-		for j := 0; j < int(b[i]); j++ {
-			z := i + j + 1
-			if ('A' <= b[z] && b[z] <= 'Z') || ('a' <= b[z] && b[z] <= 'z') {
-				if digest.Bit(z) == 0 {
-					b[z] = b[z] | 0x20
-				} else {
-					b[z] = b[z] &^ 0x20
-				}
+		if ('A' <= bi && bi <= 'Z') || ('a' <= bi && bi <= 'z') {
+			if digest.Bit(i) == 0 {
+				b[i] = bi | 0x20
+			} else {
+				b[i] = bi &^ 0x20
 			}
 		}
 	}
-
 	return nil
 }
 
