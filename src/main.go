@@ -36,9 +36,10 @@ func main() {
 		return
 	}
 	aead.Print()
+
 	fmt.Printf("  Length:                 %d\n", len(cipher))
 	fmt.Printf("  Tag:                    %s\n", hex.EncodeToString(tag))
-	fmt.Printf("  Hex:                    %s\n", hex.EncodeToString(cipher))
+	fmt.Printf("  Hex:\n%s\n", prettyBytes(cipher, 2))
 
 	// 5. Output
 	output := new(OutputJson)
