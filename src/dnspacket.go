@@ -5,68 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-
-	"github.com/iden3/go-iden3-crypto/poseidon"
 )
-
-// ---
-
-type QName []byte
-
-func (qn *QName) String() string {
-	out := ""
-	b := *qn
-
-	for i := 0; i < len(b); i += int(b[i]) + 1 {
-		if b[i] == 0 {
-			break
-		}
-		for j := 0; j < int(b[i]); j++ {
-			out += fmt.Sprintf("%c", b[i+j+1])
-		}
-		out += "."
-	}
-
-	return out
-}
-
-func (qn *QName) Encode0x20() error {
-	b := *qn
-
-	// fit 255, fill 46
-	wdot := []byte("." + b.String())
-	padding := bytes.Repeat([]byte{46}, 255-len(wdot))
-	wdot = append(wdot, padding...)
-
-	digest, err := poseidon.HashBytesX(wdot, 9)
-	if err != nil {
-		return err
-	}
-
-	for i, bi := range wdot {
-		if bi == 46 {
-			continue
-		}
-		if ('A' <= bi && bi <= 'Z') || ('a' <= bi && bi <= 'z') {
-			if digest.Bit(i) == 0 {
-				b[i] = bi | 0x20
-			} else {
-				b[i] = bi &^ 0x20
-			}
-		}
-	}
-	return nil
-}
-
-// ---
-
-type DnsResourceRecord interface {
-	Marshal(b []byte) error
-	Unmarshal() []byte
-	Print()
-}
-
-// ---
 
 type DnsHeader struct {
 	id      [2]byte
@@ -118,11 +57,15 @@ func (h *DnsHeader) Unmarshal() []byte {
 func (h *DnsHeader) Print() {
 	fmt.Println("Header")
 	fmt.Printf("  ID:        0x%s\n", hex.EncodeToString(h.id[:]))
-	fmt.Printf("  Flags:     %b %b\n", h.flags[0], h.flags[1])
+	fmt.Printf("  Flags:     %08b %08b\n", h.flags[0], h.flags[1])
 	fmt.Printf("  QDCOUNT:   0x%s\n", hex.EncodeToString(h.qdcount[:]))
 	fmt.Printf("  ANCOUNT:   0x%s\n", hex.EncodeToString(h.ancount[:]))
 	fmt.Printf("  NSCOUNT:   0x%s\n", hex.EncodeToString(h.nscount[:]))
 	fmt.Printf("  ARCOUNT:   0x%s\n", hex.EncodeToString(h.arcount[:]))
+}
+
+func (h *DnsHeader) Length() int {
+	return 12
 }
 
 // ---
@@ -132,6 +75,7 @@ type DnsPacket struct {
 	question   []DnsQuestion
 	answer     []DnsResourceRecord // Not used for simplicity
 	authority  []DnsResourceRecord // Not used for simplicity
+	rem        []byte              // Remaining (not-marshalled) bytes
 	additional []DnsResourceRecord
 }
 
@@ -143,12 +87,18 @@ func (p *DnsPacket) Marshal(b []byte) error {
 	if err := p.header.Marshal(b[:11]); err != nil {
 		return err
 	}
+	b = b[12:]
 
-	q := new(DnsQuestion)
-	if err := q.Marshal(b[12:]); err != nil {
-		return err
+	qdcount := int(binary.BigEndian.Uint16(p.header.qdcount[:]))
+	for i := 0; i < qdcount; i++ {
+		q := new(DnsQuestion)
+		if err := q.Marshal(b); err != nil {
+			return err
+		}
+		b = b[q.Length():]
+		p.question = append(p.question, *q)
 	}
-	p.question = append(p.question, *q)
+	p.rem = b
 
 	return nil
 }
@@ -169,6 +119,8 @@ func (p *DnsPacket) Unmarshal() []byte {
 	for _, rr := range p.authority {
 		buf = append(buf, rr.Unmarshal()...)
 	}
+
+	buf = append(buf, p.rem...)
 
 	for _, rr := range p.additional {
 		buf = append(buf, rr.Unmarshal()...)
@@ -195,10 +147,30 @@ func (p *DnsPacket) Print() {
 		rr.Print()
 	}
 
+	fmt.Println("Remaining not-marshalled bytes")
+	fmt.Println(prettyBytes(p.rem, 1))
+
 	for i, rr := range p.additional {
 		fmt.Printf("Additional Rerouces Record #%d\n", i)
 		rr.Print()
 	}
+}
+
+func (p *DnsPacket) Length() int {
+	acc := p.header.Length() + len(p.rem)
+	for _, qd := range p.question {
+		acc += qd.Length()
+	}
+	for _, an := range p.answer {
+		acc += an.Length()
+	}
+	for _, ns := range p.authority {
+		acc += ns.Length()
+	}
+	for _, ar := range p.additional {
+		acc += ar.Length()
+	}
+	return acc
 }
 
 func (p *DnsPacket) AppendAdditionalRR(rr DnsResourceRecord) {

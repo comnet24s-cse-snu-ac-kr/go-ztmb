@@ -3,38 +3,37 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"os"
 )
+
+func check(err error) {
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
+}
 
 func main() {
 	// 1. Input
 	input := new(InputJson)
 	packet, aead, err := input.ReadFile()
-	if err != nil {
-		fmt.Println("error:", err)
-		return
-	}
+	check(err)
 
 	// 2. Add EDNS0 padding opt
 	padding := new(DnsRROPT)
-	padding.FillZero(512 - len(input.Packet)/2 - 4)
+	padding.FillZero(512 - packet.Length() - 4) // Decrease 4 for OPT_RR metadata
 	packet.AppendAdditionalRR(padding)
 	paddingOnly := packet.Unmarshal()
 
 	// 3. Encode 0x20
 	for _, q := range packet.question {
-		if err := q.qname.Encode0x20(); err != nil {
-			fmt.Println("error:", err)
-			return
-		}
+		check(q.qname.Encode0x20())
 	}
 	packet.Print()
 
 	// 4. Encrypt w/ AES_256_GCM
 	cipher, tag, err := aead.Encrypt(packet.Unmarshal())
-	if err != nil {
-		fmt.Println("error:", err)
-		return
-	}
+	check(err)
 	aead.Print()
 
 	fmt.Printf("  Length:                 %d\n", len(cipher))
@@ -43,8 +42,5 @@ func main() {
 
 	// 5. Output
 	output := new(OutputJson)
-	if err := output.WriteFile(paddingOnly, cipher, aead); err != nil {
-		fmt.Println("error:", err)
-		return
-	}
+	check(output.WriteFile(paddingOnly, cipher, aead))
 }

@@ -1,6 +1,7 @@
 BINARY := ztmb
 GO_FILES := $(wildcard src/*.go)
 BUILD := build
+INSTALL_DIR=/usr/local/bin
 
 VERSION=0.1.0
 COMMIT=$(shell git rev-parse HEAD)
@@ -20,11 +21,11 @@ build-arm:
 build-amd:
 	GOOS=darwin GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD}/${BINARY}-darwin-amd64 ${GO_FILES}
 
-run: build
-	./$(BINARY)
+install:
+	sudo cp ./${BINARY} ${INSTALL_DIR}
 
 clean:
-	rm -f $(BINARY)*
+	rm -f ${BINARY}*
 
 fmt:
 	go fmt ./...
@@ -35,4 +36,4 @@ deps:
 test:
 	go test ${GO_FILES} -v
 
-.PHONY: all build run clean test fmt lint deps help
+.PHONY: all build build-all build-arm build-amd install clean fmt deps test
