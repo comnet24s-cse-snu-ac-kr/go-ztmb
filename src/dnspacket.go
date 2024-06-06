@@ -118,7 +118,7 @@ func (h *DnsHeader) Unmarshal() []byte {
 func (h *DnsHeader) Print() {
 	fmt.Println("Header")
 	fmt.Printf("  ID:        0x%s\n", hex.EncodeToString(h.id[:]))
-	fmt.Printf("  Flags:     %b %b\n", h.flags[0], h.flags[1])
+	fmt.Printf("  Flags:     %08b %08b\n", h.flags[0], h.flags[1])
 	fmt.Printf("  QDCOUNT:   0x%s\n", hex.EncodeToString(h.qdcount[:]))
 	fmt.Printf("  ANCOUNT:   0x%s\n", hex.EncodeToString(h.ancount[:]))
 	fmt.Printf("  NSCOUNT:   0x%s\n", hex.EncodeToString(h.nscount[:]))
