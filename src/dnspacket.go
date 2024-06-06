@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 
 	"github.com/iden3/go-iden3-crypto/poseidon"
@@ -35,6 +36,9 @@ func (qn *QName) Encode0x20() error {
 
 	// fit 255, fill 46
 	wdot := []byte("." + b.String())
+  if len(wdot) > 255 {
+    return errors.New(fmt.Sprintf("QNAME size limit exceeded (%dbytes): %s\n", len(wdot), wdot))
+  }
 	padding := bytes.Repeat([]byte{46}, 255-len(wdot))
 	wdot = append(wdot, padding...)
 
