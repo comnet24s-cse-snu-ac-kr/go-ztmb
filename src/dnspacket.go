@@ -65,7 +65,7 @@ func (h *DnsHeader) Print() {
 }
 
 func (h *DnsHeader) Length() int {
-  return 12
+	return 12
 }
 
 // ---
@@ -75,7 +75,7 @@ type DnsPacket struct {
 	question   []DnsQuestion
 	answer     []DnsResourceRecord // Not used for simplicity
 	authority  []DnsResourceRecord // Not used for simplicity
-  rem        []byte // Remaining (not-marshalled) bytes
+	rem        []byte              // Remaining (not-marshalled) bytes
 	additional []DnsResourceRecord
 }
 
@@ -87,18 +87,18 @@ func (p *DnsPacket) Marshal(b []byte) error {
 	if err := p.header.Marshal(b[:11]); err != nil {
 		return err
 	}
-  b = b[12:]
+	b = b[12:]
 
-  qdcount := int(binary.BigEndian.Uint16(p.header.qdcount[:]))
-  for i := 0; i < qdcount; i++ {
-    q := new(DnsQuestion)
-    if err := q.Marshal(b); err != nil {
-      return err
-    }
-    b = b[q.Length():]
-    p.question = append(p.question, *q)
-  }
-  p.rem = b
+	qdcount := int(binary.BigEndian.Uint16(p.header.qdcount[:]))
+	for i := 0; i < qdcount; i++ {
+		q := new(DnsQuestion)
+		if err := q.Marshal(b); err != nil {
+			return err
+		}
+		b = b[q.Length():]
+		p.question = append(p.question, *q)
+	}
+	p.rem = b
 
 	return nil
 }
@@ -120,7 +120,7 @@ func (p *DnsPacket) Unmarshal() []byte {
 		buf = append(buf, rr.Unmarshal()...)
 	}
 
-  buf = append(buf, p.rem...)
+	buf = append(buf, p.rem...)
 
 	for _, rr := range p.additional {
 		buf = append(buf, rr.Unmarshal()...)
@@ -147,8 +147,8 @@ func (p *DnsPacket) Print() {
 		rr.Print()
 	}
 
-  fmt.Println("Remaining not-marshalled bytes")
-  fmt.Println(prettyBytes(p.rem, 1))
+	fmt.Println("Remaining not-marshalled bytes")
+	fmt.Println(prettyBytes(p.rem, 1))
 
 	for i, rr := range p.additional {
 		fmt.Printf("Additional Rerouces Record #%d\n", i)
@@ -157,20 +157,20 @@ func (p *DnsPacket) Print() {
 }
 
 func (p *DnsPacket) Length() int {
-  acc := p.header.Length() + len(p.rem)
-  for _, qd := range p.question {
-    acc += qd.Length()
-  }
-  for _, an := range p.answer {
-    acc += an.Length()
-  }
-  for _, ns := range p.authority {
-    acc += ns.Length()
-  }
-  for _, ar := range p.additional {
-    acc += ar.Length()
-  }
-  return acc
+	acc := p.header.Length() + len(p.rem)
+	for _, qd := range p.question {
+		acc += qd.Length()
+	}
+	for _, an := range p.answer {
+		acc += an.Length()
+	}
+	for _, ns := range p.authority {
+		acc += ns.Length()
+	}
+	for _, ar := range p.additional {
+		acc += ar.Length()
+	}
+	return acc
 }
 
 func (p *DnsPacket) AppendAdditionalRR(rr DnsResourceRecord) {

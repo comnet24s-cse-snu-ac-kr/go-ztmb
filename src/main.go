@@ -7,17 +7,17 @@ import (
 )
 
 func check(err error) {
-  if err != nil {
-    fmt.Println("error:", err)
-    os.Exit(1)
-  }
+	if err != nil {
+		fmt.Println("error:", err)
+		os.Exit(1)
+	}
 }
 
 func main() {
 	// 1. Input
 	input := new(InputJson)
 	packet, aead, err := input.ReadFile()
-  check(err)
+	check(err)
 
 	// 2. Add EDNS0 padding opt
 	padding := new(DnsRROPT)
@@ -33,7 +33,7 @@ func main() {
 
 	// 4. Encrypt w/ AES_256_GCM
 	cipher, tag, err := aead.Encrypt(packet.Unmarshal())
-  check(err)
+	check(err)
 	aead.Print()
 
 	fmt.Printf("  Length:                 %d\n", len(cipher))

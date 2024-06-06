@@ -15,7 +15,7 @@ type DnsResourceRecord interface {
 	Marshal(b []byte) error
 	Unmarshal() []byte
 	Print()
-  Length() int
+	Length() int
 }
 
 type DnsRROPT struct {
@@ -67,5 +67,5 @@ func (rr *DnsRROPT) Print() {
 }
 
 func (rr *DnsRROPT) Length() int {
-  return len(rr.padding) + 4
+	return len(rr.padding) + 4
 }

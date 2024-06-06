@@ -13,11 +13,11 @@ type DnsQuestion struct {
 }
 
 func (q *DnsQuestion) Marshal(b []byte) error {
-  if err :=  q.qname.Marshal(b); err != nil {
-    return err
-  }
+	if err := q.qname.Marshal(b); err != nil {
+		return err
+	}
 
-  reader := bytes.NewReader(b[q.qname.length:])
+	reader := bytes.NewReader(b[q.qname.length:])
 
 	if _, err := reader.Read(q.qtype[:]); err != nil {
 		return err
@@ -48,5 +48,5 @@ func (q *DnsQuestion) Print() {
 }
 
 func (q *DnsQuestion) Length() int {
-  return q.qname.Length() + 4
+	return q.qname.Length() + 4
 }
