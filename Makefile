@@ -22,13 +22,13 @@ build-amd:
 	GOOS=darwin GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD}/${BINARY}-darwin-amd64 ${GO_FILES}
 
 run: build
-	./$(BINARY)
+	./${BINARY}
 
 install:
-	sudo cp ./$(BINARY) $(INSTALL_DIR)
+	sudo cp ./${BINARY} ${INSTALL_DIR}
 
 clean:
-	rm -f $(BINARY)*
+	rm -f ${BINARY}*
 
 fmt:
 	go fmt ./...
@@ -39,4 +39,4 @@ deps:
 test:
 	go test ${GO_FILES} -v
 
-.PHONY: all build run clean test fmt lint deps help
+.PHONY: all build build-all build-arm build-amd run install clean fmt deps test
