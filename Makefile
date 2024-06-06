@@ -21,9 +21,6 @@ build-arm:
 build-amd:
 	GOOS=darwin GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD}/${BINARY}-darwin-amd64 ${GO_FILES}
 
-run: build
-	./${BINARY}
-
 install:
 	sudo cp ./${BINARY} ${INSTALL_DIR}
 
@@ -39,4 +36,4 @@ deps:
 test:
 	go test ${GO_FILES} -v
 
-.PHONY: all build build-all build-arm build-amd run install clean fmt deps test
+.PHONY: all build build-all build-arm build-amd install clean fmt deps test
