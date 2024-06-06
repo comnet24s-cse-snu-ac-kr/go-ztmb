@@ -21,7 +21,7 @@ func main() {
 
 	// 2. Add EDNS0 padding opt
 	padding := new(DnsRROPT)
-	padding.FillZero(512 - len(input.Packet)/2 - 4)
+	padding.FillZero(512 - packet.Length() - 4) // Decrease 4 for OPT_RR metadata
 	packet.AppendAdditionalRR(padding)
 	paddingOnly := packet.Unmarshal()
 

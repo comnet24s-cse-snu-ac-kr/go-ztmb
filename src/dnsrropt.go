@@ -11,6 +11,13 @@ const (
 	OPT_CODE_PADDING = 12
 )
 
+type DnsResourceRecord interface {
+	Marshal(b []byte) error
+	Unmarshal() []byte
+	Print()
+  Length() int
+}
+
 type DnsRROPT struct {
 	optionCode   [2]byte
 	optionLength [2]byte
@@ -52,9 +59,13 @@ func (rr *DnsRROPT) FillZero(size int) {
 	rr.padding = bytes.Repeat([]byte{0}, size)
 }
 
-func (rr DnsRROPT) Print() {
+func (rr *DnsRROPT) Print() {
 	fmt.Println("RR OPT")
 	fmt.Printf("  OPTCODE:  0x%s\n", hex.EncodeToString(rr.optionCode[:]))
 	fmt.Printf("  OPTLEN:   0x%s\n", hex.EncodeToString(rr.optionLength[:]))
 	fmt.Printf("  PADDING:\n%s\n", prettyBytes(rr.padding[:], 2))
+}
+
+func (rr *DnsRROPT) Length() int {
+  return len(rr.padding) + 4
 }
