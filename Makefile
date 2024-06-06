@@ -1,6 +1,7 @@
 BINARY := ztmb
 GO_FILES := $(wildcard src/*.go)
 BUILD := build
+INSTALL_DIR=/usr/local/bin
 
 VERSION=0.1.0
 COMMIT=$(shell git rev-parse HEAD)
@@ -22,6 +23,9 @@ build-amd:
 
 run: build
 	./$(BINARY)
+
+install:
+	sudo cp ./$(BINARY) $(INSTALL_DIR)
 
 clean:
 	rm -f $(BINARY)*
