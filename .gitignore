@@ -24,6 +24,5 @@ go.work.sum
 # Build & run result
 ztmb
 result.json
-
-# Helper scripts
 *.sh
+*.swp
