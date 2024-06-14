@@ -35,6 +35,7 @@ resource "aws_security_group" "sg1" {
   description = "Security group 1"
   vpc_id      = aws_vpc.main.id
 
+  # Debug
   ingress {
     from_port   = 22
     to_port     = 22
@@ -43,18 +44,20 @@ resource "aws_security_group" "sg1" {
   }
 
   ingress {
-    from_port   = 853
-    to_port     = 853
-    protocol    = "tcp"
-    cidr_blocks = ["172.16.20.0/24"]
-  }
-
-  ingress {
     from_port   = 8
     to_port     = 0
     protocol    = "icmp"
     cidr_blocks = ["172.16.10.0/24", "172.16.20.0/24"]
   }
+
+  ##
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["172.16.10.0/24", "172.16.20.0/24"]
+  }
+  ##
 
   egress {
     from_port   = 0
@@ -81,17 +84,26 @@ resource "aws_security_group" "sg2" {
   }
 
   ingress {
-    from_port   = 853
-    to_port     = 853
-    protocol    = "tcp"
-    cidr_blocks = ["172.16.10.0/24"]
-  }
-
-  ingress {
     from_port   = 8
     to_port     = 0
     protocol    = "icmp"
     cidr_blocks = ["172.16.10.0/24", "172.16.20.0/24"]
+  }
+
+  ##
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["172.16.10.0/24", "172.16.20.0/24"]
+  }
+  ##
+
+  ingress {
+    from_port   = 853
+    to_port     = 853
+    protocol    = "tcp"
+    cidr_blocks = ["172.16.10.0/24"]
   }
 
   egress {
@@ -192,6 +204,8 @@ resource "aws_instance" "middlebox" {
   user_data = <<-EOF
             #!/bin/bash
             hostnamectl set-hostname middlebox
+            yum install -y nc git vim
+            yum groupinstall -y "Development Tools"
             EOF
 
   tags = {
@@ -217,8 +231,14 @@ resource "aws_instance" "bot" {
 
   user_data = <<-EOF
             #!/bin/bash
-            ip route add 172.16.20.0/24 via 172.16.10.254
             hostnamectl set-hostname bot
+            ip route add 172.16.20.0/24 via 172.16.10.254
+
+            yum install -y nc git vim
+            yum groupinstall -y "Development Tools"
+
+            wget -qO- https://go.dev/dl/go1.22.4.linux-amd64.tar.gz | sudo tar -xzC /usr/local
+            echo 'export PATH=$PATH:/usr/local/go/bin' >> /home/ec2-user/.bashrc
             EOF
 
   tags = {
@@ -243,8 +263,14 @@ resource "aws_instance" "attacker" {
 
   user_data = <<-EOF
             #!/bin/bash
-            ip route add 172.16.10.0/24 via 172.16.20.254
             hostnamectl set-hostname attacker
+            ip route add 172.16.10.0/24 via 172.16.20.254
+
+            yum install -y nc git vim
+            yum groupinstall -y "Development Tools"
+
+            wget -qO- https://go.dev/dl/go1.22.4.linux-amd64.tar.gz | sudo tar -xzC /usr/local
+            echo 'export PATH=$PATH:/usr/local/go/bin' >> /home/ec2-user/.bashrc
             EOF
 
   tags = {
