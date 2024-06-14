@@ -3,39 +3,49 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"log"
 )
 
-func main() {
-	// Client TLS configuration
+const (
+  VRF_URL = "localhost"
+  VRF_PORT = 853
+  VRF_PROTOCOL = "tcp"
+)
+
+func send(data []byte) ([]byte, error) {
 	config := &tls.Config{
-		InsecureSkipVerify: true, // For demonstration purposes only
-		MinVersion:         tls.VersionTLS13, // Ensure TLS 1.3
+		InsecureSkipVerify: true,
+		MinVersion:         tls.VersionTLS13,
 	}
 
-	// Connect to the server
-	conn, err := tls.Dial("tcp", "localhost:853", config)
+	conn, err := tls.Dial(VRF_PROTOCOL, fmt.Sprintf("%s:%d", VRF_URL, VRF_PORT), config)
 	if err != nil {
-		fmt.Println("Failed to connect to server:", err)
-		return
+		return nil, err
 	}
 	defer conn.Close()
-	fmt.Println("Connected to server")
+  log.Println(fmt.Sprintf("Connected to verifier: %s:%d/%s", VRF_URL, VRF_PORT, VRF_PROTOCOL))
 
-	// Send a message to the server
-	message := "Hello, secure world!"
-	_, err = conn.Write([]byte(message))
-	if err != nil {
-		fmt.Println("Failed to send message:", err)
-		return
+	if _, err = conn.Write(data); err != nil {
+		return nil, err
 	}
-	fmt.Printf("Sent: %s\n", message)
+  log.Println("Sent")
 
-	// Read the response from the server
 	buf := make([]byte, 512)
 	n, err := conn.Read(buf)
 	if err != nil {
-		fmt.Println("Failed to read response:", err)
-		return
+		return nil, err
 	}
-	fmt.Printf("Received: %s\n", string(buf[:n]))
+	log.Printf("Received")
+
+  return buf[:n], nil
+}
+
+func main() {
+  for {
+    var input string
+    if _, err := fmt.Scanln(&input); err != nil {
+      log.Fatal(err)
+    }
+    send([]byte(input))
+  }
 }
