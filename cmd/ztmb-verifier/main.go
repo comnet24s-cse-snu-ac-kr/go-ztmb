@@ -2,63 +2,121 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/hex"
 	"fmt"
-	"io"
+	"log"
 	"net"
+	"time"
 )
 
-func main() {
-	// Server TLS configuration
+// TODO: env config
+const (
+	SERVER_PORT     = 853
+	SERVER_PROTOCOL = "tcp"
+
+	UPSTREAM_ADDR     = "127.0.0.1"
+	UPSTREAM_PORT     = 53
+	UPSTREAM_PROTOCOL = "udp"
+)
+
+func server() error {
+	// 1. TLS configuration
 	cert, err := tls.LoadX509KeyPair("server.crt", "server.key")
 	if err != nil {
-		fmt.Println("Failed to load key pair:", err)
-		return
+		return err
 	}
-
 	config := &tls.Config{
 		Certificates: []tls.Certificate{cert},
-		MinVersion:   tls.VersionTLS13, // Ensure TLS 1.3
+		MinVersion:   tls.VersionTLS13,
 	}
 
-	// Listen on TCP port 853
-	ln, err := tls.Listen("tcp", ":853", config)
+	// 2. Listen on TCP port 853
+	ln, err := tls.Listen(SERVER_PROTOCOL, fmt.Sprintf(":%d", SERVER_PORT), config)
 	if err != nil {
-		fmt.Println("Failed to listen on port 853:", err)
-		return
+		return err
 	}
 	defer ln.Close()
-	fmt.Println("Server listening on port 853")
+	log.Printf("server: Started (%d/%s)\n", SERVER_PORT, SERVER_PROTOCOL)
 
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			fmt.Println("Failed to accept connection:", err)
+			log.Println("error:", err)
 			continue
 		}
-		go handleConnection(conn)
+		go handleServer(conn)
 	}
 }
 
-func handleConnection(conn net.Conn) {
+func handleServer(conn net.Conn) {
 	defer conn.Close()
-	fmt.Println("Accepted new connection")
+	log.Println("handleServer: Connection accepted")
 
-	buf := make([]byte, 512)
+	msg := make([]byte, 512)
 	for {
-		n, err := conn.Read(buf)
+		// Receive data
+		n, err := conn.Read(msg)
 		if err != nil {
-			if err != io.EOF {
-				fmt.Println("Failed to read data:", err)
-			}
+			log.Println("error:", err)
 			return
 		}
-		fmt.Printf("Received: %s\n", string(buf[:n]))
+		msg = msg[:n]
+		log.Printf("handleServer: Received (%s)\n", hex.EncodeToString(msg))
+
+		upstreamResponse, err := handleUpstream(msg)
+		if err != nil {
+			log.Println("error:", err)
+			return
+		}
 
 		// Echo the data back to the client
-		_, err = conn.Write(buf[:n])
+		_, err = conn.Write(upstreamResponse)
 		if err != nil {
-			fmt.Println("Failed to write data:", err)
+			log.Println("error:", err)
 			return
 		}
+	}
+}
+
+func handleUpstream(msg []byte) ([]byte, error) {
+	// Setup upstream
+	udpAddr, err := net.ResolveUDPAddr(UPSTREAM_PROTOCOL, fmt.Sprintf("%s:%d", UPSTREAM_ADDR, UPSTREAM_PORT))
+	if err != nil {
+		return nil, err
+	}
+
+	conn, err := net.DialUDP(UPSTREAM_PROTOCOL, nil, udpAddr)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	// Send the message
+	_, err = conn.Write(msg)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("handleUpstream: Sent (%s)\n", hex.EncodeToString(msg))
+
+	// Set a read deadline
+	if err := conn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
+		return nil, err
+	}
+
+	// Receive the response
+	response := make([]byte, 1024)
+	n, _, err := conn.ReadFromUDP(response)
+	if err != nil {
+		return nil, err
+	}
+	response = response[:n]
+	log.Printf("handleUpstream: Received (%s)\n", hex.EncodeToString(response))
+
+	return response, nil
+}
+
+func main() {
+	if err := server(); err != nil {
+		log.Fatalln("error", err)
 	}
 }
