@@ -17,6 +17,9 @@ const (
 	UPSTREAM_ADDR     = "127.0.0.1"
 	UPSTREAM_PORT     = 53
 	UPSTREAM_PROTOCOL = "udp"
+
+  TLS_MAX_SIZE = 16 * 1024
+  UDP_MAX_SIZE = 65535
 )
 
 func server() error {
@@ -52,7 +55,7 @@ func handleServer(conn net.Conn) {
 	defer conn.Close()
 	log.Println("handleServer: Connection accepted")
 
-	msg := make([]byte, 512)
+	msg := make([]byte, TLS_MAX_SIZE)
 	for {
 		// Receive data
 		n, err := conn.Read(msg)
@@ -104,7 +107,7 @@ func handleUpstream(msg []byte) ([]byte, error) {
 	}
 
 	// Receive the response
-	response := make([]byte, 1024)
+	response := make([]byte, UDP_MAX_SIZE)
 	n, _, err := conn.ReadFromUDP(response)
 	if err != nil {
 		return nil, err

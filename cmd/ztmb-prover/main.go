@@ -17,6 +17,9 @@ const (
 	SERVER_ADDR     = "0.0.0.0"
 	SERVER_PORT     = 20053
 	SERVER_PROTOCOL = "udp"
+
+  TLS_MAX_SIZE = 16 * 1024
+  UDP_MAX_SIZE = 65526
 )
 
 var (
@@ -43,7 +46,7 @@ func upstream(data []byte) ([]byte, error) {
 	log.Printf("upstream: Sent (%s)", hex.EncodeToString(data))
 
 	// 3. Response
-	buf := make([]byte, 512)
+	buf := make([]byte, TLS_MAX_SIZE)
 	n, err := conn.Read(buf)
 	if err != nil {
 		return nil, err
@@ -66,24 +69,27 @@ func server() error {
 	defer conn.Close()
 	log.Printf("server: Started (%d/%s)", addr.Port, SERVER_PROTOCOL)
 
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, UDP_MAX_SIZE)
 	for {
 		// 2. Handle request
 		n, remoteAddr, err := conn.ReadFromUDP(buffer)
 		if err != nil {
-			log.Printf("error: %v", err)
+			log.Println("error:", err)
 			continue
 		}
-		log.Printf("server: Received (%d bytes, %v, %s)", n, remoteAddr, buffer[:n])
+		log.Printf("server: Received (%d bytes from %v)", n, remoteAddr)
 
 		// 3. Response upstream
 		rcvd, err := upstream(buffer[:n])
-		_, err = conn.WriteToUDP(rcvd, remoteAddr)
-		if err != nil {
-			log.Printf("error: %v", err)
+    if err != nil {
+      log.Println("error:", err)
+      continue
+    }
+    if _, err := conn.WriteToUDP(rcvd, remoteAddr); err != nil {
+			log.Println("error:", err)
 			continue
 		}
-		log.Printf("server: Response (%d bytes ,%v, %s)", n, remoteAddr, buffer[:n])
+		log.Printf("server: Response (%d bytes ,%v)", n, remoteAddr)
 	}
 }
 

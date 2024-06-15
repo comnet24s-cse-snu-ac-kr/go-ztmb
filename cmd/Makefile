@@ -9,7 +9,7 @@ COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 LDFLAGS = -ldflags "-X main.VERSION=${VERSION} -X main.COMMIT=${COMMIT} -X main.BRANCH=${BRANCH}"
 
-all: build
+all: build build-linux
 
 build:
 	GOOS=darwin GOARCH=arm64 go build ${LDFLAGS} -o ${PRV_BINARY}-darwin-arm64 ${PRV_GO_FILES}
