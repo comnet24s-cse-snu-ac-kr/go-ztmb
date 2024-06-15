@@ -6,17 +6,21 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 )
 
 const (
   // TODO: Must be handled w/ env
-  UPSTREAM_ADDR = "localhost"
   UPSTREAM_PORT = 853
   UPSTREAM_PROTOCOL = "tcp"
 
   SERVER_ADDR = "0.0.0.0"
-  SERVER_PORT = 53
+  SERVER_PORT = 20053
   SERVER_PROTOCOL = "udp"
+)
+
+var (
+  UPSTREAM_ADDR = os.Getenv("UPSTREAM_ADDR")
 )
 
 func upstream(data []byte) ([]byte, error) {
@@ -84,5 +88,7 @@ func server() error {
 }
 
 func main() {
-  server()
+  if err := server(); err != nil {
+    log.Fatalln("error:", err)
+  }
 }
