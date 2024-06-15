@@ -11,8 +11,8 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "subnet1" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "172.16.10.0/24"
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "172.16.10.0/24"
   availability_zone = "ap-northeast-2a"
 
   tags = {
@@ -21,8 +21,8 @@ resource "aws_subnet" "subnet1" {
 }
 
 resource "aws_subnet" "subnet2" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "172.16.20.0/24"
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "172.16.20.0/24"
   availability_zone = "ap-northeast-2a"
 
   tags = {
@@ -165,10 +165,10 @@ output "private_key" {
 }
 
 resource "aws_network_interface" "nic1" {
-  subnet_id       = aws_subnet.subnet1.id
-  private_ips     = ["172.16.10.254"]
-  security_groups = [aws_security_group.sg1.id]
-  source_dest_check           = false
+  subnet_id         = aws_subnet.subnet1.id
+  private_ips       = ["172.16.10.254"]
+  security_groups   = [aws_security_group.sg1.id]
+  source_dest_check = false
 
   tags = {
     Name = "nic1"
@@ -176,10 +176,10 @@ resource "aws_network_interface" "nic1" {
 }
 
 resource "aws_network_interface" "nic2" {
-  subnet_id       = aws_subnet.subnet2.id
-  private_ips     = ["172.16.20.254"]
-  security_groups = [aws_security_group.sg2.id]
-  source_dest_check           = false
+  subnet_id         = aws_subnet.subnet2.id
+  private_ips       = ["172.16.20.254"]
+  security_groups   = [aws_security_group.sg2.id]
+  source_dest_check = false
 
   tags = {
     Name = "nic2"
@@ -187,9 +187,9 @@ resource "aws_network_interface" "nic2" {
 }
 
 resource "aws_instance" "middlebox" {
-  ami                         = data.aws_ami.amzn.id
-  instance_type               = "t2.micro"  # t2.medium
-  key_name                    = aws_key_pair.ssh.key_name
+  ami           = data.aws_ami.amzn.id
+  instance_type = "t2.micro" # t2.medium
+  key_name      = aws_key_pair.ssh.key_name
 
   network_interface {
     device_index         = 0
@@ -222,12 +222,12 @@ resource "aws_eip" "middlebox" {
 # ---
 
 resource "aws_instance" "bot" {
-  ami                         = data.aws_ami.amzn.id
-  instance_type               = "t2.micro"  # t3a.2xlarge
-  subnet_id                   = aws_subnet.subnet1.id
-  security_groups             = [aws_security_group.sg1.id]
-  private_ip                  = "172.16.10.10"
-  key_name                    = aws_key_pair.ssh.key_name
+  ami             = data.aws_ami.amzn.id
+  instance_type   = "t2.micro" # t3a.2xlarge
+  subnet_id       = aws_subnet.subnet1.id
+  security_groups = [aws_security_group.sg1.id]
+  private_ip      = "172.16.10.10"
+  key_name        = aws_key_pair.ssh.key_name
 
   user_data = <<-EOF
             #!/bin/bash
@@ -239,6 +239,9 @@ resource "aws_instance" "bot" {
 
             wget -qO- https://go.dev/dl/go1.22.4.linux-amd64.tar.gz | sudo tar -xzC /usr/local
             echo 'export PATH=$PATH:/usr/local/go/bin' >> /home/ec2-user/.bashrc
+
+            echo '172.16.10.10 bot.ztmb.io' >> /etc/hosts
+            echo '172.16.20.10 attacker.ztmb.io' >> /etc/hosts
             EOF
 
   tags = {
@@ -247,19 +250,19 @@ resource "aws_instance" "bot" {
 }
 
 resource "aws_eip" "bot" {
-  domain                    = "vpc"
+  domain   = "vpc"
   instance = aws_instance.bot.id
 }
 
 # ---
 
 resource "aws_instance" "attacker" {
-  ami                         = data.aws_ami.amzn.id
-  instance_type               = "t2.micro"  # t2.medium
-  subnet_id                   = aws_subnet.subnet2.id
-  security_groups             = [aws_security_group.sg2.id]
-  private_ip                  = "172.16.20.10"
-  key_name                    = aws_key_pair.ssh.key_name
+  ami             = data.aws_ami.amzn.id
+  instance_type   = "t2.micro" # t2.medium
+  subnet_id       = aws_subnet.subnet2.id
+  security_groups = [aws_security_group.sg2.id]
+  private_ip      = "172.16.20.10"
+  key_name        = aws_key_pair.ssh.key_name
 
   user_data = <<-EOF
             #!/bin/bash
@@ -271,6 +274,9 @@ resource "aws_instance" "attacker" {
 
             wget -qO- https://go.dev/dl/go1.22.4.linux-amd64.tar.gz | sudo tar -xzC /usr/local
             echo 'export PATH=$PATH:/usr/local/go/bin' >> /home/ec2-user/.bashrc
+
+            echo '172.16.10.10 bot.ztmb.io' >> /etc/hosts
+            echo '172.16.20.10 attacker.ztmb.io' >> /etc/hosts
             EOF
 
   tags = {
@@ -279,6 +285,6 @@ resource "aws_instance" "attacker" {
 }
 
 resource "aws_eip" "attacker" {
-  domain                    = "vpc"
+  domain   = "vpc"
   instance = aws_instance.attacker.id
 }
