@@ -20,7 +20,12 @@ func preproxy(packet []byte) ([]byte, error) {
     if n, err := q.Qname().Encode0x20(); err != nil {
       return nil, err
     } else {
-      log.Printf("preproxy: Modified byte count: (%d/%d)", n, q.Length())
+      for i, sig := range logic.IodineSigs {
+        if sig.Check(packet) {
+          log.Printf("preproxy: Iodine signature detected (ID:%d)", i)
+        }
+      }
+      log.Printf("preproxy: Modified byte count (%d/%d)", n, q.Length())
     }
 	}
 
