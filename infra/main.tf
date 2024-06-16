@@ -188,6 +188,7 @@ resource "aws_network_interface" "nic2" {
 
 resource "aws_instance" "middlebox" {
   ami           = data.aws_ami.amzn.id
+  # ami           = "ami-0f0646a5f59758444"
   instance_type = "t2.micro" # t2.medium
   key_name      = aws_key_pair.ssh.key_name
 
@@ -223,6 +224,7 @@ resource "aws_eip" "middlebox" {
 
 resource "aws_instance" "bot" {
   ami             = data.aws_ami.amzn.id
+  # ami           = "ami-0f0646a5f59758444"
   instance_type   = "t2.micro" # t3a.2xlarge
   subnet_id       = aws_subnet.subnet1.id
   security_groups = [aws_security_group.sg1.id]
@@ -258,6 +260,7 @@ resource "aws_eip" "bot" {
 
 resource "aws_instance" "attacker" {
   ami             = data.aws_ami.amzn.id
+  # ami           = "ami-0f0646a5f59758444"
   instance_type   = "t2.micro" # t2.medium
   subnet_id       = aws_subnet.subnet2.id
   security_groups = [aws_security_group.sg2.id]

@@ -1,11 +1,11 @@
-package main
+package app
 
 import (
 	"log"
 	"net"
 )
 
-func server() error {
+func Server() error {
 	// 1. Init
 	addr := net.UDPAddr{
 		Port: SERVER_PORT,
@@ -34,7 +34,13 @@ func server() error {
       log.Println("error:", err)
       continue
     }
-    if _, err := conn.WriteToUDP(rcvd, remoteAddr); err != nil {
+
+    res, err := preproxy(rcvd)
+    if err != nil {
+			log.Println("error:", err)
+			continue
+    }
+    if _, err := conn.WriteToUDP(res, remoteAddr); err != nil {
 			log.Println("error:", err)
 			continue
 		}
