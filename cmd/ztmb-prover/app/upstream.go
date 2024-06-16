@@ -2,7 +2,6 @@ package app
 
 import (
 	"crypto/tls"
-	"encoding/hex"
 	"fmt"
 	"log"
 )
@@ -24,7 +23,7 @@ func upstream(data []byte) ([]byte, error) {
 	if _, err = conn.Write(data); err != nil {
 		return nil, err
 	}
-	log.Printf("upstream: Sent (%s)", hex.EncodeToString(data))
+	log.Printf("upstream: Sent (%d bytes)", len(data))
 
 	// 3. Response
 	buf := make([]byte, TLS_MAX_SIZE)
@@ -32,7 +31,7 @@ func upstream(data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("upstream: Received (%s)", hex.EncodeToString(buf))
+	log.Printf("upstream: Received (%d bytes)", len(buf))
 
 	return buf[:n], nil
 }

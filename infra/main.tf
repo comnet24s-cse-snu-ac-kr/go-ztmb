@@ -207,6 +207,15 @@ resource "aws_instance" "middlebox" {
             hostnamectl set-hostname middlebox
             yum install -y nc git vim
             yum groupinstall -y "Development Tools"
+
+            wget -qO- https://go.dev/dl/go1.22.4.linux-amd64.tar.gz | sudo tar -xzC /usr/local
+            echo 'export PATH=$PATH:/usr/local/go/bin' >> /home/ec2-user/.bashrc
+
+            echo '172.16.10.10 bot.ztmb.io' >> /etc/hosts
+            echo '172.16.20.10 attacker.ztmb.io' >> /etc/hosts
+
+            echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.d/99-ztmb.conf
+            sysctl net.ipv4.ip_forward=1
             EOF
 
   tags = {
@@ -243,7 +252,11 @@ resource "aws_instance" "bot" {
             echo 'export PATH=$PATH:/usr/local/go/bin' >> /home/ec2-user/.bashrc
 
             echo '172.16.10.10 bot.ztmb.io' >> /etc/hosts
+            echo '172.16.10.254 middlebox.ztmb.io' >> /etc/hosts
             echo '172.16.20.10 attacker.ztmb.io' >> /etc/hosts
+
+            echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.d/99-ztmb.conf
+            sysctl net.ipv4.ip_forward=1
             EOF
 
   tags = {
@@ -279,7 +292,11 @@ resource "aws_instance" "attacker" {
             echo 'export PATH=$PATH:/usr/local/go/bin' >> /home/ec2-user/.bashrc
 
             echo '172.16.10.10 bot.ztmb.io' >> /etc/hosts
+            echo '172.16.20.254 middlebox.ztmb.io' >> /etc/hosts
             echo '172.16.20.10 attacker.ztmb.io' >> /etc/hosts
+
+            echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.d/99-ztmb.conf
+            sysctl net.ipv4.ip_forward=1
             EOF
 
   tags = {

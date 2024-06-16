@@ -7,7 +7,7 @@ LDFLAGS = -ldflags "-X main.VERSION=${VERSION} -X main.COMMIT=${COMMIT} -X main.
 
 all: build
 
-build: build-darwin-arm
+build: build-linux-amd
 
 build-darwin-arm:
 	GOOS=darwin GOARCH=arm64 go build ${LDFLAGS} -o ${BUILD}/ztmb-doh-proxy cmd/ztmb-doh-proxy/*.go

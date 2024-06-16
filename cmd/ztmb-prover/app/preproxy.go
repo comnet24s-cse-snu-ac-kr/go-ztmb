@@ -1,7 +1,9 @@
 package app
 
 import (
-  "github.com/ztmb/ztmb/pkg/logic"
+	"log"
+
+	"github.com/ztmb/ztmb/pkg/logic"
 )
 
 func preproxy(packet []byte) ([]byte, error) {
@@ -15,8 +17,10 @@ func preproxy(packet []byte) ([]byte, error) {
   // dns.AppendAdditionalRR(padding)
 
 	for _, q := range dns.Question() {
-    if err := q.Qname().Encode0x20(); err != nil {
+    if n, err := q.Qname().Encode0x20(); err != nil {
       return nil, err
+    } else {
+      log.Printf("preproxy: Modified byte count: (%d/%d)", n, q.Length())
     }
 	}
 

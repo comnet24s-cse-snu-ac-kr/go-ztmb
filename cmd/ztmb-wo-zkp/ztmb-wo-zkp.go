@@ -28,7 +28,8 @@ func main() {
 
 	// 3. Encode 0x20
 	for _, q := range packet.Question() {
-		check(q.Qname().Encode0x20())
+    _, err := q.Qname().Encode0x20()
+    check(err)
 	}
 	packet.Print()
 

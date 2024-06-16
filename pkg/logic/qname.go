@@ -61,7 +61,7 @@ func (qn *QName) Length() int {
 	return qn.length
 }
 
-func (qn *QName) Encode0x20() error {
+func (qn *QName) Encode0x20() (int, error) {
 	// fit 255, fill 46
 	wdot := []byte("." + qn.String())
 	padding := bytes.Repeat([]byte{'.'}, 255-len(wdot))
@@ -69,23 +69,26 @@ func (qn *QName) Encode0x20() error {
 
 	digest, err := poseidon.HashBytesX(wdot, 9)
 	if err != nil {
-		return err
+		return -1, err
 	}
 
 	idx := 0
+  cnt := 0
 	for i, label := range qn.labels {
 		for j, c := range label {
 			idx++
 			if ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z') {
 				if digest.Bit(idx) == 0 {
 					qn.labels[i][j] = c | 0x20
+          cnt++
 				} else {
 					qn.labels[i][j] = c &^ 0x20
+          cnt++
 				}
 			}
 		}
 		idx++
 	}
 
-	return nil
+	return cnt, nil
 }
