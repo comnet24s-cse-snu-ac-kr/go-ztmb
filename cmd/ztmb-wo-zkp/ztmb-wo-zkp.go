@@ -27,11 +27,16 @@ func main() {
 	paddingOnly := packet.Unmarshal()
 
 	// 3. Encode 0x20
+  totalLength := 0
+  totalModified := 0
 	for _, q := range packet.Question() {
-    _, err := q.Qname().Encode0x20()
+    n, err := q.Qname().Encode0x20()
     check(err)
+    totalLength += q.Qname().Length()
+    totalModified += n
 	}
 	packet.Print()
+	fmt.Printf("  0x20 Modified/Total:    %d/%d\n", totalModified, totalLength)
 
 	// 4. Encrypt w/ AES_256_GCM
 	cipher, tag, err := aead.Encrypt(packet.Unmarshal())
