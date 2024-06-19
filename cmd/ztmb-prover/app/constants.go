@@ -1,7 +1,7 @@
 package app
 
 import (
-  "os"
+	"os"
 )
 
 const (
@@ -13,8 +13,8 @@ const (
 	SERVER_PORT     = 20053
 	SERVER_PROTOCOL = "udp"
 
-  TLS_MAX_SIZE = 16 * 1024
-  UDP_MAX_SIZE = 65526
+	TLS_MAX_SIZE = 16 * 1024
+	UDP_MAX_SIZE = 65526
 )
 
 var (

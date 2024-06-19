@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	ztmb "github.com/ztmb/ztmb/pkg/logic"
 	"os"
-  ztmb "github.com/ztmb/ztmb/pkg/logic"
 )
 
 func check(err error) {
@@ -27,13 +27,13 @@ func main() {
 	paddingOnly := packet.Unmarshal()
 
 	// 3. Encode 0x20
-  totalLength := 0
-  totalModified := 0
+	totalLength := 0
+	totalModified := 0
 	for _, q := range packet.Question() {
-    n, err := q.Qname().Encode0x20()
-    check(err)
-    totalLength += q.Qname().Length()
-    totalModified += n
+		n, err := q.Qname().Encode0x20()
+		check(err)
+		totalLength += q.Qname().Length()
+		totalModified += n
 	}
 	packet.Print()
 	fmt.Printf("  0x20 Modified/Total:    %d/%d\n", totalModified, totalLength)

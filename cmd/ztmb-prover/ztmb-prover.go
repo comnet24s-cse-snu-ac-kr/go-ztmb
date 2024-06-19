@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/ztmb/ztmb/cmd/ztmb-prover/app"
 	"log"
-  "github.com/ztmb/ztmb/cmd/ztmb-prover/app"
 )
 
 func main() {

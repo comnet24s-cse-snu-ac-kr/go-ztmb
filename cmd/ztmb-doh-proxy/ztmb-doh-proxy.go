@@ -18,11 +18,11 @@ const (
 	UPSTREAM_PORT     = 53
 	UPSTREAM_PROTOCOL = "udp"
 
-  TLS_MAX_SIZE = 16 * 1024
-  UDP_MAX_SIZE = 65535
+	TLS_MAX_SIZE = 16 * 1024
+	UDP_MAX_SIZE = 65535
 
-  TLS_KEY_FILE = "proxy.key"
-  TLS_CRT_FILE = "proxy.crt"
+	TLS_KEY_FILE = "proxy.key"
+	TLS_CRT_FILE = "proxy.crt"
 )
 
 func server() error {

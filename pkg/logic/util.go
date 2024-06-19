@@ -28,5 +28,5 @@ func prettyBytes(bs []byte, indent int) string {
 }
 
 func PrettyBytes(bs []byte, indent int) string {
-  return prettyBytes(bs, indent)
+	return prettyBytes(bs, indent)
 }

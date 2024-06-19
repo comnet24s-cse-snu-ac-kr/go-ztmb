@@ -30,17 +30,17 @@ func Server() error {
 
 		// 3. Response upstream
 		rcvd, err := upstream(buffer[:n])
-    if err != nil {
-      log.Println("error:", err)
-      continue
-    }
-
-    res, err := preproxy(rcvd)
-    if err != nil {
+		if err != nil {
 			log.Println("error:", err)
 			continue
-    }
-    if _, err := conn.WriteToUDP(res, remoteAddr); err != nil {
+		}
+
+		res, err := preproxy(rcvd)
+		if err != nil {
+			log.Println("error:", err)
+			continue
+		}
+		if _, err := conn.WriteToUDP(res, remoteAddr); err != nil {
 			log.Println("error:", err)
 			continue
 		}
