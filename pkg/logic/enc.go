@@ -13,7 +13,10 @@ import (
 // ---
 
 const (
-	AEAD_TAG_SIZE = 16
+	AEAD_TAG_SIZE                       = 16
+	AEAD_DEFAULT_KEY                    = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+	AEAD_DEFAULT_NONCE                  = "000102030405060708090a0b"
+	AEAD_DEFAULT_PRECOUNTERBLOCK_SUFFIX = "00000002"
 )
 
 type AEAD interface {

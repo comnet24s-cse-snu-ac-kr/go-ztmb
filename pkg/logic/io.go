@@ -30,6 +30,10 @@ func (input *InputJson) ReadFile() (*DnsPacket, AEAD, error) {
 		return nil, nil, err
 	}
 
+	// Set default value
+	input.Key = AEAD_DEFAULT_KEY
+	input.Nonce = AEAD_DEFAULT_NONCE
+	input.Counter = AEAD_DEFAULT_PRECOUNTERBLOCK_SUFFIX
 	if err := json.Unmarshal(raw, input); err != nil {
 		return nil, nil, err
 	}
@@ -43,7 +47,6 @@ func (input *InputJson) ReadFile() (*DnsPacket, AEAD, error) {
 
 	aead := new(aesParam)
 	// aead := new(chachaPolyParam)
-
 	if aead.key, err = hex.DecodeString(input.Key); err != nil {
 		return nil, nil, err
 	}
