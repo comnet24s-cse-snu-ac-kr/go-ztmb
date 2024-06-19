@@ -25,6 +25,7 @@ go.work.sum
 ztmb
 result.json
 *.sh
+!scripts/*.sh
 *.swp
 *.log
 *.csv
