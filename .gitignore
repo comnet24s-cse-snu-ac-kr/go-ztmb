@@ -26,3 +26,5 @@ ztmb
 result.json
 *.sh
 *.swp
+*.log
+*.csv
