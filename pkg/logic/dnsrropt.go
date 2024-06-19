@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 )
 
@@ -53,10 +54,15 @@ func (rr *DnsRROPT) Unmarshal() []byte {
 	return buf
 }
 
-func (rr *DnsRROPT) FillZero(size int) {
+func (rr *DnsRROPT) FillZero(size int) error {
+	if size < 0 {
+		return errors.New("Negative size")
+	}
 	binary.BigEndian.PutUint16(rr.optionCode[:], OPT_CODE_PADDING)
 	binary.BigEndian.PutUint16(rr.optionLength[:], uint16(size))
 	rr.padding = bytes.Repeat([]byte{0}, size)
+
+	return nil
 }
 
 func (rr *DnsRROPT) Print() {
