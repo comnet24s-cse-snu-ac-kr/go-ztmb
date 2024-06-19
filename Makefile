@@ -1,7 +1,4 @@
-BINARY := ztmb
-GO_FILES := $(wildcard src/*.go)
-BUILD := build
-INSTALL_DIR=/usr/local/bin
+BUILD=build
 
 VERSION=0.1.0
 COMMIT=$(shell git rev-parse HEAD)
@@ -10,22 +7,20 @@ LDFLAGS = -ldflags "-X main.VERSION=${VERSION} -X main.COMMIT=${COMMIT} -X main.
 
 all: build
 
-build:
-	go build ${LDFLAGS} -o ${BINARY} ${GO_FILES}
+build: build-darwin-arm
 
-build-all: build-arm build-amd
+build-darwin-arm:
+	GOOS=darwin GOARCH=arm64 go build ${LDFLAGS} -o ${BUILD}/ztmb-doh-proxy cmd/ztmb-doh-proxy/*.go
+	GOOS=darwin GOARCH=arm64 go build ${LDFLAGS} -o ${BUILD}/ztmb-prover cmd/ztmb-prover/*.go
+	GOOS=darwin GOARCH=arm64 go build ${LDFLAGS} -o ${BUILD}/ztmb-wo-zkp cmd/ztmb-wo-zkp/*.go
 
-build-arm:
-	GOOS=darwin GOARCH=arm64 go build ${LDFLAGS} -o ${BUILD}/${BINARY}-darwin-arm64 ${GO_FILES}
-
-build-amd:
-	GOOS=darwin GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD}/${BINARY}-darwin-amd64 ${GO_FILES}
-
-install:
-	sudo cp ./${BINARY} ${INSTALL_DIR}
+build-linux-amd:
+	GOOS=linux GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD}/ztmb-doh-proxy cmd/ztmb-doh-proxy/*.go
+	GOOS=linux GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD}/ztmb-prover cmd/ztmb-prover/*.go
+	GOOS=linux GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD}/ztmb-wo-zkp cmd/ztmb-wo-zkp/*.go
 
 clean:
-	rm -f ${BINARY}*
+	rm -vf ${BUILD}/*
 
 fmt:
 	go fmt ./...
@@ -36,4 +31,4 @@ deps:
 test:
 	go test ${GO_FILES} -v
 
-.PHONY: all build build-all build-arm build-amd install clean fmt deps test
+.PHONY: all build build-darwin-arm build-linux-amd clean fmt deps test
