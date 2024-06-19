@@ -73,17 +73,18 @@ func (qn *QName) Encode0x20() (int, error) {
 	}
 
 	idx := 0
-  cnt := 0
+	cnt := 0
 	for i, label := range qn.labels {
 		for j, c := range label {
 			idx++
 			if ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z') {
 				if digest.Bit(idx) == 0 {
 					qn.labels[i][j] = c | 0x20
-          cnt++
 				} else {
 					qn.labels[i][j] = c &^ 0x20
-          cnt++
+				}
+				if qn.labels[i][j] != c {
+					cnt++
 				}
 			}
 		}
